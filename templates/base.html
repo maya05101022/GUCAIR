@@ -1,0 +1,137 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="{% block meta_description %}GUCAIR is an international academic consortium helping universities assess, monitor and improve institutional AI readiness.{% endblock %}">
+    <title>{% block title %}GUCAIR — Global University Consortium of AI Readiness{% endblock %}</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <link href="{% static 'css/styles.css' %}" rel="stylesheet">
+    <link rel="icon" href="{% static 'images/favicon.svg' %}" type="image/svg+xml">
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="{% block body_class %}public-body{% endblock %}">
+<a class="skip-link" href="#main-content">Skip to content</a>
+
+{% block header %}
+<nav class="navbar navbar-expand-lg site-navbar sticky-top" aria-label="Main navigation">
+    <div class="container">
+        <a class="navbar-brand" href="{% url 'core:landing' %}">
+            <span class="brand-mark" aria-hidden="true"><i class="fa-solid fa-graduation-cap"></i></span>
+            <span class="brand-text">
+                <strong>GUCAIR</strong>
+                <span>Global University Consortium of AI Readiness</span>
+            </span>
+        </a>
+        <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#primaryNav" aria-controls="primaryNav" aria-expanded="false" aria-label="Toggle navigation">
+            <span class="navbar-toggler-icon"></span>
+        </button>
+        <div class="collapse navbar-collapse" id="primaryNav">
+            <ul class="navbar-nav mx-auto">
+                <li class="nav-item"><a class="nav-link {% if request.resolver_match.url_name == 'landing' %}active{% endif %}" href="{% url 'core:landing' %}">Home</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'core:landing' %}#about">About</a></li>
+                <li class="nav-item"><a class="nav-link {% if request.resolver_match.app_name == 'universities' %}active{% endif %}" href="{% url 'universities:list' %}">Universities</a></li>
+                <li class="nav-item"><a class="nav-link {% if request.resolver_match.app_name == 'resources' %}active{% endif %}" href="{% url 'resources:list' %}">Resource Hub</a></li>
+                {% if user.is_authenticated %}
+                <li class="nav-item"><a class="nav-link {% if request.resolver_match.app_name == 'analytics' %}active{% endif %}" href="{% url 'analytics:dashboard' %}">Analytics</a></li>
+                <li class="nav-item"><a class="nav-link" href="{% url 'analytics:comparison' %}">Compare</a></li>
+                {% endif %}
+            </ul>
+            <div class="navbar-actions d-flex align-items-center gap-2">
+                {% if user.is_authenticated %}
+                    <a class="btn btn-navy btn-sm" href="{% url 'dashboard:home' %}"><i class="fa-solid fa-gauge-high me-1"></i> Dashboard</a>
+                    <div class="dropdown">
+                        <button class="btn btn-user dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                            <span class="avatar-sm">{{ user.username|slice:":1"|upper }}</span>
+                            <span class="d-none d-xl-inline">{{ user.get_short_name|default:user.username }}</span>
+                        </button>
+                        <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                            <li><a class="dropdown-item" href="{% url 'accounts:profile' %}"><i class="fa-regular fa-user me-2"></i>My profile</a></li>
+                            {% if user_profile.is_administrator %}
+                            <li><a class="dropdown-item" href="{% url 'dashboard:admin_home' %}"><i class="fa-solid fa-shield-halved me-2"></i>Admin dashboard</a></li>
+                            {% endif %}
+                            <li><hr class="dropdown-divider"></li>
+                            <li>
+                                <form method="post" action="{% url 'accounts:logout' %}">
+                                    {% csrf_token %}
+                                    <button type="submit" class="dropdown-item"><i class="fa-solid fa-arrow-right-from-bracket me-2"></i>Sign out</button>
+                                </form>
+                            </li>
+                        </ul>
+                    </div>
+                {% else %}
+                    <a class="btn btn-link-navy d-none d-sm-inline-flex" href="{% url 'accounts:login' %}">Sign in</a>
+                    <a class="btn btn-navy btn-sm" href="{% url 'accounts:register' %}">Register university</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</nav>
+{% endblock %}
+
+{% include "partials/messages.html" %}
+
+<main id="main-content">
+    {% block content %}{% endblock %}
+</main>
+
+{% block footer %}
+<footer class="site-footer">
+    <div class="container">
+        <div class="row g-4 footer-top">
+            <div class="col-lg-4">
+                <div class="footer-brand">
+                    <span class="brand-mark brand-mark-light" aria-hidden="true"><i class="fa-solid fa-graduation-cap"></i></span>
+                    <div>
+                        <strong>GUCAIR</strong>
+                        <span>Global University Consortium<br>of AI Readiness</span>
+                    </div>
+                </div>
+                <p class="footer-note">An international academic platform for evaluating, comparing and strengthening institutional AI readiness. The assessment is indicative and does not constitute accreditation.</p>
+            </div>
+            <div class="col-6 col-lg-2">
+                <h6 class="footer-heading">Platform</h6>
+                <ul class="footer-links">
+                    <li><a href="{% url 'core:landing' %}">Home</a></li>
+                    <li><a href="{% url 'universities:list' %}">Universities</a></li>
+                    <li><a href="{% url 'resources:list' %}">Resource Hub</a></li>
+                    <li><a href="{% url 'core:about' %}">About the consortium</a></li>
+                </ul>
+            </div>
+            <div class="col-6 col-lg-2">
+                <h6 class="footer-heading">Members</h6>
+                <ul class="footer-links">
+                    <li><a href="{% url 'accounts:register' %}">Register a university</a></li>
+                    <li><a href="{% url 'accounts:login' %}">Member sign in</a></li>
+                    <li><a href="{% url 'analytics:dashboard' %}">Analytics</a></li>
+                    <li><a href="{% url 'analytics:comparison' %}">Compare institutions</a></li>
+                </ul>
+            </div>
+            <div class="col-lg-4">
+                <h6 class="footer-heading">Secretariat</h6>
+                <ul class="footer-contact">
+                    <li><i class="fa-regular fa-envelope"></i><a href="mailto:{{ site_email }}">{{ site_email }}</a></li>
+                    <li><i class="fa-solid fa-globe"></i>International academic collaboration</li>
+                    <li><i class="fa-regular fa-building"></i>Consortium coordination office</li>
+                </ul>
+                <a class="btn btn-sm btn-footer-cta" href="{% url 'core:contact' %}">Contact the secretariat <i class="fa-solid fa-arrow-right ms-1"></i></a>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <span>© {{ current_year }} GUCAIR. All rights reserved.</span>
+            <span class="footer-legal">Assessment results are indicative, self-reported and not official accreditation.</span>
+        </div>
+    </div>
+</footer>
+{% endblock %}
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{% static 'js/app.js' %}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

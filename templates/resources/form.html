@@ -1,0 +1,59 @@
+{% extends "base_dashboard.html" %}
+{% block title %}{% if is_create %}New resource{% else %}Edit resource{% endif %}{% endblock %}
+{% block page_eyebrow %}Administration{% endblock %}
+{% block page_title %}{% if is_create %}New resource{% else %}Edit resource{% endif %}{% endblock %}
+{% block content %}
+<div class="page-head">
+    <div>
+        <h2>{% if is_create %}Publish to the AI Resource Hub{% else %}{{ resource.title }}{% endif %}</h2>
+        <p>Resources are curated educational material for consortium members and the public.</p>
+    </div>
+    <div class="page-actions">
+        <a class="btn btn-sm btn-outline-navy" href="{% url 'resources:manage' %}"><i class="fa-solid fa-arrow-left me-1"></i>Resource management</a>
+    </div>
+</div>
+<div class="row g-3">
+    <div class="col-lg-8">
+        <div class="card-panel">
+            <div class="card-panel-header"><h3>Resource content</h3>{% if not is_create %}<span class="badge-soft {% if resource.is_published %}badge-approved{% else %}badge-draft{% endif %}">{% if resource.is_published %}Published{% else %}Draft{% endif %}</span>{% endif %}</div>
+            <div class="card-panel-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+                    <div class="row g-3">
+                        <div class="col-12">{% include "partials/field.html" with field=form.title %}</div>
+                        <div class="col-md-6">{% include "partials/field.html" with field=form.category %}</div>
+                        <div class="col-md-6">{% include "partials/field.html" with field=form.external_link %}</div>
+                        <div class="col-12">{% include "partials/field.html" with field=form.summary %}</div>
+                        <div class="col-12">{% include "partials/field.html" with field=form.content %}</div>
+                        <div class="col-12">
+                            <div class="form-check">
+                                {{ form.is_published }}
+                                <label class="form-check-label small" for="{{ form.is_published.id_for_label }}">Publish immediately (uncheck to save as a draft)</label>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="d-flex gap-2 mt-3">
+                        <button type="submit" class="btn btn-navy">{% if is_create %}Create resource{% else %}Save changes{% endif %}</button>
+                        <a class="btn btn-outline-navy" href="{% url 'resources:manage' %}">Cancel</a>
+                        {% if not is_create %}<a class="btn btn-link-navy ms-auto" href="{{ resource.get_absolute_url }}">Preview</a>{% endif %}
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card-panel">
+            <div class="card-panel-header"><h3>Editorial guidance</h3></div>
+            <div class="card-panel-body">
+                <ul class="checklist">
+                    <li><i class="fa-solid fa-circle-check done"></i><span>Keep summaries factual and free of promotional claims.</span></li>
+                    <li><i class="fa-solid fa-circle-check done"></i><span>Do not imply partnerships, endorsements or official standards unless verified.</span></li>
+                    <li><i class="fa-solid fa-circle-check done"></i><span>Explain limitations and context where guidance could be misapplied.</span></li>
+                    <li><i class="fa-solid fa-circle-check done"></i><span>External links are references only; verify they resolve.</span></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,15 @@
+{% extends "base.html" %}
+{% block title %}Page not found — GUCAIR{% endblock %}
+{% block content %}
+<section class="section">
+    <div class="container text-center" style="max-width:640px;">
+        <p class="eyebrow justify-content-center" style="justify-content:center;">Error 404</p>
+        <h1 class="display-serif mb-3" style="font-size:2.6rem;color:var(--navy-950);">We couldn't find that page.</h1>
+        <p class="text-muted-soft mb-4">The link may be outdated, or the page may have moved. Use the navigation above or return to the homepage.</p>
+        <div class="d-flex justify-content-center gap-2 flex-wrap">
+            <a class="btn btn-navy" href="{% url 'core:landing' %}">Return home</a>
+            <a class="btn btn-outline-navy" href="{% url 'universities:list' %}">Browse universities</a>
+        </div>
+    </div>
+</section>
+{% endblock %}

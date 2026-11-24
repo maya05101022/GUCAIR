@@ -1,0 +1,79 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Resource management{% endblock %}
+{% block page_eyebrow %}Administration{% endblock %}
+{% block page_title %}Resource library{% endblock %}
+{% block content %}
+<div class="page-head">
+    <div>
+        <h2>AI Resource Hub</h2>
+        <p>{{ total }} resource{{ total|pluralize }} matching filters</p>
+    </div>
+    <div class="page-actions">
+        <a class="btn btn-sm btn-outline-navy" href="{% url 'resources:list' %}"><i class="fa-solid fa-arrow-up-right-from-square me-1"></i>View public hub</a>
+        <a class="btn btn-sm btn-navy" href="{% url 'resources:create' %}"><i class="fa-solid fa-plus me-1"></i>New resource</a>
+    </div>
+</div>
+
+<form method="get" class="filter-bar">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-4">
+            <label class="form-label" for="q">Search</label>
+            <input type="search" class="form-control" id="q" name="q" value="{{ q }}" placeholder="Title or summary">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label" for="category">Category</label>
+            <select class="form-select" id="category" name="category">
+                <option value="">All categories</option>
+                {% for value, label in categories %}<option value="{{ value }}" {% if category == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="col-md-3">
+            <label class="form-label" for="status">Status</label>
+            <select class="form-select" id="status" name="status">
+                <option value="">All</option>
+                <option value="published" {% if status == 'published' %}selected{% endif %}>Published</option>
+                <option value="draft" {% if status == 'draft' %}selected{% endif %}>Draft</option>
+            </select>
+        </div>
+        <div class="col-md-2 d-flex gap-2">
+            <button class="btn btn-navy flex-fill" type="submit">Filter</button>
+            <a class="btn btn-outline-navy" href="{% url 'resources:manage' %}"><i class="fa-solid fa-rotate-left"></i></a>
+        </div>
+    </div>
+</form>
+
+<div class="card-panel">
+    <div class="table-wrap">
+        <table class="table table-clean">
+            <thead><tr><th>Title</th><th>Category</th><th>Status</th><th>Author</th><th>Updated</th><th class="text-end">Actions</th></tr></thead>
+            <tbody>
+                {% for resource in resources %}
+                <tr>
+                    <td>
+                        <div class="fw-cell">{{ resource.title|truncatechars:44 }}</div>
+                        <div class="text-xxs text-muted-soft">{{ resource.summary|truncatechars:70 }}</div>
+                    </td>
+                    <td><span class="badge-soft badge-neutral">{{ resource.get_category_display }}</span></td>
+                    <td><span class="badge-soft {% if resource.is_published %}badge-approved{% else %}badge-draft{% endif %}">{% if resource.is_published %}Published{% else %}Draft{% endif %}</span></td>
+                    <td>{{ resource.created_by.username|default:"—" }}</td>
+                    <td>{{ resource.updated_at|date:"d M Y" }}</td>
+                    <td class="text-end">
+                        <div class="table-actions justify-content-end">
+                            <a class="btn btn-table" href="{{ resource.get_absolute_url }}">View</a>
+                            <a class="btn btn-table" href="{% url 'resources:edit' resource.slug %}"><i class="fa-solid fa-pen"></i></a>
+                            <form method="post" action="{% url 'resources:delete' resource.slug %}" data-confirm="Delete the resource “{{ resource.title|escapejs }}” permanently?">
+                                {% csrf_token %}
+                                <button class="btn btn-table btn-table-danger" type="submit"><i class="fa-solid fa-trash"></i></button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6"><div class="empty-state"><div class="empty-icon"><i class="fa-solid fa-book-open"></i></div><h3>No resources match</h3><p>Create the first resource or adjust the filters.</p><a class="btn btn-navy" href="{% url 'resources:create' %}">New resource</a></div></td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% include "partials/pagination.html" %}
+{% endblock %}

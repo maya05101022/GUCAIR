@@ -1,0 +1,58 @@
+{% extends "base.html" %}
+{% block title %}AI Resource Hub — GUCAIR{% endblock %}
+{% block content %}
+<section class="section-sm bg-surface border-bottom">
+    <div class="container">
+        <p class="eyebrow">AI resource hub</p>
+        <h1 class="display-serif mb-2" style="font-size:clamp(1.9rem,3.2vw,2.6rem);color:var(--navy-950);">Practical guidance for responsible AI adoption</h1>
+        <p class="text-muted-soft mb-0">Learning resources, implementation guidelines, governance notes and research planning material for universities. Curated educational content — not commercial endorsement.</p>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <form method="get" class="filter-bar">
+            <div class="row g-2 align-items-end">
+                <div class="col-md-6">
+                    <label class="form-label" for="q">Search resources</label>
+                    <input type="search" class="form-control" id="q" name="q" value="{{ q }}" placeholder="Title, summary or content">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="category">Category</label>
+                    <select class="form-select" id="category" name="category">
+                        <option value="">All categories</option>
+                        {% for value, label in categories %}<option value="{{ value }}" {% if category == value %}selected{% endif %}>{{ label }}</option>{% endfor %}
+                    </select>
+                </div>
+                <div class="col-md-2 d-flex gap-2">
+                    <button class="btn btn-navy flex-fill" type="submit">Filter</button>
+                    <a class="btn btn-outline-navy" href="{% url 'resources:list' %}" title="Reset"><i class="fa-solid fa-rotate-left"></i></a>
+                </div>
+            </div>
+        </form>
+
+        <div class="d-flex justify-content-between align-items-center mb-3">
+            <p class="small text-muted-soft mb-0">{{ total }} resource{{ total|pluralize }} available</p>
+            {% if user_profile.is_administrator %}<a class="link-arrow" href="{% url 'resources:manage' %}"><i class="fa-solid fa-gear"></i> Manage library</a>{% endif %}
+        </div>
+
+        <div class="row g-3">
+            {% for resource in resources %}
+            <div class="col-md-6 col-lg-4">
+                <a href="{{ resource.get_absolute_url }}" class="resource-card text-decoration-none">
+                    <div class="resource-card-body">
+                        <span class="resource-cat"><i class="fa-solid fa-bookmark"></i>{{ resource.get_category_display }}</span>
+                        <h2 class="fs-6">{{ resource.title }}</h2>
+                        <p>{{ resource.summary|truncatechars:150 }}</p>
+                        <div class="resource-meta"><span>{{ resource.updated_at|date:"d M Y" }}</span><span>Open <i class="fa-solid fa-arrow-right ms-1"></i></span></div>
+                    </div>
+                </a>
+            </div>
+            {% empty %}
+            <div class="col-12"><div class="card-panel"><div class="empty-state"><div class="empty-icon"><i class="fa-solid fa-book-open"></i></div><h3>No resources match</h3><p>Try a different search term or category. New resources are published by consortium administrators.</p><a class="btn btn-outline-navy" href="{% url 'resources:list' %}">Clear filters</a></div></div></div>
+            {% endfor %}
+        </div>
+        {% include "partials/pagination.html" %}
+    </div>
+</section>
+{% endblock %}

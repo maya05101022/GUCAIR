@@ -1,0 +1,101 @@
+{% extends "base_dashboard.html" %}
+{% block title %}New AI readiness assessment{% endblock %}
+{% block page_eyebrow %}Institutional assessment{% endblock %}
+{% block page_title %}New assessment{% endblock %}
+{% block content %}
+<div class="page-head">
+    <div>
+        <h2>{{ university.name }}</h2>
+        <p>{{ question_count }} indicators · six dimensions · one consistent maturity scale</p>
+    </div>
+    <div class="page-actions">
+        <a class="btn btn-sm btn-outline-navy" href="{% url 'assessments:overview' %}"><i class="fa-solid fa-arrow-left me-1"></i>Assessment overview</a>
+    </div>
+</div>
+
+{% if form.errors %}
+<div class="alert alert-danger" id="assessment-errors">
+    <p class="fw-semibold mb-1"><i class="fa-solid fa-circle-exclamation me-2"></i>Please answer every question.</p>
+    <p class="small mb-0">{{ form.errors|length }} response{{ form.errors|length|pluralize }} need attention. Missing questions are highlighted below.</p>
+</div>
+{% endif %}
+
+<form method="post" id="assessmentForm" data-assessment-form novalidate>
+    {% csrf_token %}
+    <div class="row g-3">
+        <div class="col-lg-8">
+            <div class="assess-progress" style="position:static;">
+                <div class="d-flex justify-content-between align-items-center mb-1">
+                    <span class="small fw-semibold text-navy">Completion</span>
+                    <span class="small text-muted-soft"><span data-answered-count>0</span> of {{ question_count }} answered · <span data-progress-text>0%</span></span>
+                </div>
+                <div class="progress" role="progressbar" aria-label="Assessment completion" aria-valuemin="0" aria-valuemax="100" aria-valuenow="0" data-progress-bar style="height:6px;"><div class="progress-bar" style="width:0%;"></div></div>
+            </div>
+
+            {% for group in groups %}
+            <div class="assess-dimension">
+                <div class="assess-dimension-head">
+                    <span class="assess-dimension-num">0{{ forloop.counter }}</span>
+                    <div>
+                        <h3>{{ group.label }}</h3>
+                        <p>{{ group.description }}</p>
+                    </div>
+                </div>
+                {% for item in group.questions %}
+                <div class="assess-question">
+                    <p class="q-label">{{ item.question.text }}<span class="req ms-1" style="color:var(--red);">*</span></p>
+                    {% if item.question.guidance %}<p class="q-guidance">{{ item.question.guidance }}</p>{% endif %}
+                    <ul class="readiness-scale">
+                        {% for value, label, hint in scale %}
+                        <li>
+                            <label>
+                                <input type="radio" name="{{ item.field.html_name }}" value="{{ value }}" id="id_{{ item.field.html_name }}_{{ value }}" {% if item.field.value|stringformat:"s" == value|stringformat:"s" %}checked{% endif %} required>
+                                <span class="scale-num">{{ value }}</span>
+                                <span class="scale-name">{{ label }}</span>
+                                <span class="scale-hint text-xxs text-muted-soft d-none d-lg-block">{{ hint }}</span>
+                            </label>
+                        </li>
+                        {% endfor %}
+                    </ul>
+                    {% for error in item.field.errors %}<p class="assess-error"><i class="fa-solid fa-circle-exclamation me-1"></i>{{ error }}</p>{% endfor %}
+                </div>
+                {% endfor %}
+            </div>
+            {% endfor %}
+
+            <div class="alert alert-danger d-none" id="assessment-incomplete"><i class="fa-solid fa-circle-exclamation me-2"></i>Some questions are unanswered. The form has been scrolled to the first missing response.</div>
+
+            <div class="d-flex gap-2 mb-4 flex-wrap">
+                <button type="submit" class="btn btn-navy"><i class="fa-solid fa-paper-plane me-2"></i>Submit assessment</button>
+                <a class="btn btn-outline-navy" href="{% url 'assessments:overview' %}">Cancel</a>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="assess-progress" style="top:80px;">
+                <p class="small fw-semibold text-navy mb-2">Before you submit</p>
+                <ul class="checklist">
+                    <li><i class="fa-solid fa-circle-check done"></i><span>All {{ question_count }} questions are marked required.</span></li>
+                    <li><i class="fa-solid fa-circle-check done"></i><span>Answers are locked to the 0–4 maturity scale.</span></li>
+                    <li><i class="fa-solid fa-circle-check done"></i><span>Scores are calculated on the server and stored.</span></li>
+                    <li><i class="fa-solid fa-circle-check done"></i><span>Previous attempts are never overwritten.</span></li>
+                </ul>
+                <button type="submit" form="assessmentForm" class="btn btn-navy w-100 mt-3"><i class="fa-solid fa-paper-plane me-2"></i>Submit assessment</button>
+            </div>
+
+            <div class="card-panel mb-3">
+                <div class="card-panel-header"><h3>Maturity scale</h3></div>
+                <div class="card-panel-body">
+                    {% for value, label, hint in scale %}
+                    <div class="d-flex gap-2 py-2 {% if not forloop.last %}border-bottom{% endif %}">
+                        <span class="rec-rank" style="width:22px;height:22px;font-size:.7rem;">{{ value }}</span>
+                        <div><p class="small fw-semibold text-navy mb-0">{{ label }}</p><p class="text-xxs text-muted-soft mb-0">{{ hint }}</p></div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            <div class="alert alert-info small"><i class="fa-solid fa-clock me-2"></i>Typical completion time is 15–20 minutes. Your progress stays in this browser until you submit; responses are stored only when the assessment is submitted.</div>
+        </div>
+    </div>
+</form>
+{% endblock %}

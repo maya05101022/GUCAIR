@@ -1,0 +1,72 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Assessment management{% endblock %}
+{% block page_eyebrow %}Administration{% endblock %}
+{% block page_title %}Assessment management{% endblock %}
+{% block content %}
+<div class="page-head">
+    <div>
+        <h2>Assessment records</h2>
+        <p>{{ total }} record{{ total|pluralize }} matching filters across all universities</p>
+    </div>
+    <div class="page-actions">
+        <a class="btn btn-sm btn-outline-navy" href="{% url 'dashboard:admin_home' %}"><i class="fa-solid fa-arrow-left me-1"></i>Admin overview</a>
+        <a class="btn btn-sm btn-outline-navy" href="{% url 'analytics:dashboard' %}"><i class="fa-solid fa-chart-column me-1"></i>Analytics</a>
+    </div>
+</div>
+
+<form method="get" class="filter-bar">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-6">
+            <label class="form-label" for="q">Search</label>
+            <input type="search" class="form-control" id="q" name="q" value="{{ q }}" placeholder="University, country or submitter">
+        </div>
+        <div class="col-md-4">
+            <label class="form-label" for="category">Readiness category</label>
+            <select class="form-select" id="category" name="category">
+                <option value="">All categories</option>
+                {% for item in categories %}<option value="{{ item }}" {% if category == item %}selected{% endif %}>{{ item }}</option>{% endfor %}
+            </select>
+        </div>
+        <div class="col-md-2 d-flex gap-2">
+            <button class="btn btn-navy flex-fill" type="submit">Filter</button>
+            <a class="btn btn-outline-navy" href="{% url 'assessments:manage' %}"><i class="fa-solid fa-rotate-left"></i></a>
+        </div>
+    </div>
+</form>
+
+<div class="card-panel">
+    <div class="table-wrap">
+        <table class="table table-clean">
+            <thead><tr><th>University</th><th>Submitted by</th><th>Score</th><th>Category</th><th>Raw</th><th>Date</th><th class="text-end">Actions</th></tr></thead>
+            <tbody>
+                {% for item in assessments %}
+                <tr>
+                    <td>
+                        <div class="fw-cell">{{ item.university.name|truncatechars:38 }}</div>
+                        <div class="text-xxs text-muted-soft">{{ item.university.country }}{% if item.university.is_demo %} · <span class="badge-soft badge-demo">Demo</span>{% endif %}</div>
+                    </td>
+                    <td>{{ item.submitted_by.username|default:"—" }}</td>
+                    <td><span class="fw-semibold text-navy">{{ item.overall_score|floatformat:1 }}%</span></td>
+                    <td><span class="badge-soft badge-{{ item.category|lower }}">{{ item.category }}</span></td>
+                    <td>{{ item.total_raw_score }}/{{ item.max_raw_score }}</td>
+                    <td>{{ item.created_at|date:"d M Y" }}</td>
+                    <td class="text-end">
+                        <div class="table-actions justify-content-end">
+                            <a class="btn btn-table" href="{% url 'assessments:detail' item.pk %}">View</a>
+                            <form method="post" action="{% url 'assessments:delete' item.pk %}" data-confirm="Permanently delete this assessment and its responses for {{ item.university.name|escapejs }}?">
+                                {% csrf_token %}
+                                <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                                <button class="btn btn-table btn-table-danger" type="submit"><i class="fa-solid fa-trash"></i></button>
+                            </form>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7"><div class="empty-state"><div class="empty-icon"><i class="fa-solid fa-clipboard-check"></i></div><h3>No assessment records</h3><p>No records match the selected filters. Assessments appear here when representatives submit them.</p></div></td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% include "partials/pagination.html" %}
+{% endblock %}

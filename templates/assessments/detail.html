@@ -1,0 +1,182 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Assessment result — {{ university.name }}{% endblock %}
+{% block page_eyebrow %}Assessment result{% endblock %}
+{% block page_title %}Readiness result{% endblock %}
+{% block content %}
+<div class="page-head">
+    <div>
+        <h2>{{ university.name }}</h2>
+        <p>Submitted {{ assessment.created_at|date:"d F Y, H:i" }}{% if assessment.submitted_by %} by {{ assessment.submitted_by.get_full_name|default:assessment.submitted_by.username }}{% endif %}</p>
+    </div>
+    <div class="page-actions">
+        <a class="btn btn-sm btn-outline-navy" href="{% url 'assessments:overview' %}"><i class="fa-solid fa-arrow-left me-1"></i>Assessment overview</a>
+        {% if not is_admin_view %}<a class="btn btn-sm btn-navy" href="{% url 'assessments:take' %}"><i class="fa-solid fa-rotate me-1"></i>Reassess</a>{% endif %}
+        {% if is_admin_view %}
+        <button class="btn btn-sm btn-danger-soft" data-bs-toggle="modal" data-bs-target="#deleteAssessment"><i class="fa-solid fa-trash me-1"></i>Delete record</button>
+        {% endif %}
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-4">
+        <div class="card-panel mb-3">
+            <div class="card-panel-header"><h3>Overall readiness</h3><span class="badge-soft badge-{{ assessment.category|lower }}">{{ assessment.category }}</span></div>
+            <div class="card-panel-body text-center">
+                <div class="score-ring score-ring-lg mx-auto mb-3" style="--value: {{ assessment.overall_score }}; --ring: {% if assessment.category == 'Initial' %}#b23b3b{% elif assessment.category == 'Developing' %}#b5852f{% elif assessment.category == 'Advanced' %}#3d6f9e{% else %}#1f7a54{% endif %};">
+                    <div class="score-ring-inner"><strong>{{ assessment.overall_score|floatformat:1 }}<span class="fs-6">%</span></strong><span>out of 100</span></div>
+                </div>
+                <p class="small mb-2">{{ assessment.total_raw_score }} of {{ assessment.max_raw_score }} maximum maturity points</p>
+                {% if delta is not None %}
+                <p class="small mb-0">
+                    {% if delta > 0 %}<span class="trend-up"><i class="fa-solid fa-arrow-trend-up me-1"></i>+{{ delta|floatformat:1 }} points</span>
+                    {% elif delta < 0 %}<span class="trend-down"><i class="fa-solid fa-arrow-trend-down me-1"></i>{{ delta|floatformat:1 }} points</span>
+                    {% else %}<span class="text-muted-soft">No change</span>{% endif %}
+                    <span class="text-muted-soft">vs previous assessment</span>
+                </p>
+                {% endif %}
+            </div>
+        </div>
+        <div class="card-panel mb-3">
+            <div class="card-panel-header"><h3>Dimension profile</h3></div>
+            <div class="card-panel-body">
+                <div class="chart-wrap chart-wrap-sm"><canvas id="radarChart" aria-label="Dimension readiness radar chart" role="img"></canvas></div>
+            </div>
+        </div>
+        {% if previous %}
+        <div class="card-panel">
+            <div class="card-panel-header"><h3>Previous assessment</h3><a class="text-xxs" href="{% url 'assessments:detail' previous.pk %}">View</a></div>
+            <div class="card-panel-body">
+                <div class="d-flex justify-content-between align-items-center">
+                    <div><p class="small fw-semibold text-navy mb-0">{{ previous.overall_score|floatformat:1 }}% · {{ previous.category }}</p><p class="text-xxs text-muted-soft mb-0">{{ previous.created_at|date:"d M Y" }}</p></div>
+                    <span class="badge-soft badge-neutral">{{ previous.total_raw_score }}/{{ previous.max_raw_score }}</span>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-lg-8">
+        <div class="card-panel mb-3">
+            <div class="card-panel-header"><h3>Dimension scores</h3><span class="text-xxs text-muted-soft">Normalised 0–100</span></div>
+            <div class="card-panel-body">
+                <div class="row g-2">
+                    {% for result in results %}
+                    <div class="col-md-6">
+                        <div class="dim-result">
+                            <div class="dim-result-head">
+                                <div><p class="dim-result-name">{{ result.get_dimension_display }}</p><span class="badge-soft badge-{{ result.category|lower }}">{{ result.category }}</span></div>
+                                <span class="dim-result-score">{{ result.score|floatformat:1 }}<small>%</small></span>
+                            </div>
+                            <div class="progress-thin"><span style="width: {{ result.score }}%"></span></div>
+                            <p class="text-xxs text-muted-soft mb-0 mt-2">{{ result.raw_score }} of {{ result.max_score }} raw points</p>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <div class="card-panel mb-3">
+            <div class="card-panel-header"><h3>Suggested priorities</h3><span class="text-xxs text-muted-soft">Based on lowest dimensions</span></div>
+            <div class="card-panel-body">
+                {% for rec in recommendations %}
+                <div class="recommendation">
+                    <span class="rec-rank">{{ forloop.counter }}</span>
+                    <div>
+                        <h4>{{ rec.label }} <span class="badge-soft badge-{{ rec.category|lower }} ms-1">{{ rec.score|floatformat:1 }}%</span></h4>
+                        <p>{{ rec.advice }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="card-panel">
+            <div class="card-panel-header"><h3>Question responses</h3><span class="badge-soft badge-neutral">{{ responses|length }} responses</span></div>
+            <div class="card-panel-body">
+                <div class="accordion accordion-flush" id="responseAccordion">
+                    {% for group in grouped_responses %}
+                    <div class="accordion-item">
+                        <h2 class="accordion-header">
+                            <button class="accordion-button {% if not forloop.first %}collapsed{% endif %}" type="button" data-bs-toggle="collapse" data-bs-target="#respGroup{{ forloop.counter }}" aria-expanded="{% if forloop.first %}true{% else %}false{% endif %}">
+                                {{ group.label }}
+                                <span class="badge-soft badge-neutral ms-2">{{ group.responses|length }} answers</span>
+                            </button>
+                        </h2>
+                        <div id="respGroup{{ forloop.counter }}" class="accordion-collapse collapse {% if forloop.first %}show{% endif %}" data-bs-parent="#responseAccordion">
+                            <div class="accordion-body p-0">
+                                <div class="table-responsive">
+                                    <table class="table table-clean mb-0">
+                                        <thead><tr><th>Indicator</th><th style="width:90px;">Score</th></tr></thead>
+                                        <tbody>
+                                            {% for response in group.responses %}
+                                            <tr><td>{{ response.question.text }}</td><td><span class="fw-semibold text-navy">{{ response.score }}</span> <span class="text-xxs text-muted-soft">/ 4</span></td></tr>
+                                            {% endfor %}
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+                <p class="text-xxs text-muted-soft mt-3 mb-0"><i class="fa-solid fa-circle-info me-1"></i>Scores are indicative and self-reported. This result is not official accreditation.</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if is_admin_view %}
+<div class="modal fade" id="deleteAssessment" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content">
+            <form method="post" action="{% url 'assessments:delete' assessment.pk %}">
+                {% csrf_token %}
+                <input type="hidden" name="next" value="{% url 'assessments:manage' %}">
+                <div class="modal-header"><h5 class="modal-title">Delete assessment record</h5><button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button></div>
+                <div class="modal-body"><div class="alert alert-danger small mb-0"><i class="fa-solid fa-triangle-exclamation me-2"></i>This permanently deletes the assessment, its {{ responses|length }} responses and all dimension results. It cannot be undone.</div></div>
+                <div class="modal-footer"><button type="button" class="btn btn-sm btn-outline-navy" data-bs-dismiss="modal">Cancel</button><button type="submit" class="btn btn-sm btn-danger-soft">Delete permanently</button></div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+{{ chart_data|json_script:"resultChartData" }}
+<script>
+(function () {
+    const data = JSON.parse(document.getElementById("resultChartData").textContent);
+    const canvas = document.getElementById("radarChart");
+    if (!canvas || !window.Chart) return;
+    const options = window.GUCAIR.baseOptions();
+    options.scales = {
+        r: {
+            beginAtZero: true, max: 100,
+            ticks: { stepSize: 25, backdropColor: "transparent", font: { size: 9, family: "Inter, sans-serif" }, color: "#8a99aa" },
+            grid: { color: "#e9eff6" },
+            angleLines: { color: "#e9eff6" },
+            pointLabels: { font: { family: "Inter, sans-serif", size: 10 }, color: "#3f4c5c" }
+        }
+    };
+    new Chart(canvas, {
+        type: "radar",
+        data: {
+            labels: data.labels,
+            datasets: [{
+                label: "Readiness score",
+                data: data.scores,
+                backgroundColor: "rgba(31,155,181,.16)",
+                borderColor: "#1f9bb5",
+                borderWidth: 2,
+                pointBackgroundColor: "#0e2c52",
+                pointRadius: 3.5
+            }]
+        },
+        options: options
+    });
+})();
+</script>
+{% endblock %}

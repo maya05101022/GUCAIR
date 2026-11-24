@@ -1,0 +1,62 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Contact messages{% endblock %}
+{% block page_eyebrow %}Administration{% endblock %}
+{% block page_title %}Contact messages{% endblock %}
+{% block content %}
+<div class="page-head">
+    <div>
+        <h2>Secretariat inbox</h2>
+        <p>{{ total }} message{{ total|pluralize }} · {{ open_count }} open</p>
+    </div>
+    <div class="page-actions">
+        <a class="btn btn-sm btn-outline-navy" href="{% url 'dashboard:admin_home' %}"><i class="fa-solid fa-arrow-left me-1"></i>Admin overview</a>
+    </div>
+</div>
+
+<form method="get" class="filter-bar">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-7">
+            <label class="form-label" for="q">Search</label>
+            <input type="search" class="form-control" id="q" name="q" value="{{ q }}" placeholder="Name, email, subject or message">
+        </div>
+        <div class="col-md-3">
+            <label class="form-label" for="status">Status</label>
+            <select class="form-select" id="status" name="status">
+                <option value="">All messages</option>
+                <option value="open" {% if status == 'open' %}selected{% endif %}>Open</option>
+                <option value="resolved" {% if status == 'resolved' %}selected{% endif %}>Resolved</option>
+            </select>
+        </div>
+        <div class="col-md-2 d-flex gap-2">
+            <button class="btn btn-navy flex-fill" type="submit">Filter</button>
+            <a class="btn btn-outline-navy" href="{% url 'core:contact_messages' %}" title="Reset"><i class="fa-solid fa-rotate-left"></i></a>
+        </div>
+    </div>
+</form>
+
+{% for message in messages_list %}
+<div class="card-panel mb-3">
+    <div class="card-panel-header">
+        <div class="min-w-0">
+            <h3 class="text-truncate">{{ message.subject }}</h3>
+            <p class="text-xxs text-muted-soft mb-0">{{ message.name }}{% if message.organization %} · {{ message.organization }}{% endif %} · {{ message.created_at|date:"d M Y, H:i" }}</p>
+        </div>
+        <div class="d-flex align-items-center gap-2">
+            <span class="badge-soft {% if message.is_resolved %}badge-approved{% else %}badge-pending{% endif %}">{% if message.is_resolved %}Resolved{% else %}Open{% endif %}</span>
+            <form method="post" action="{% url 'core:toggle_contact_message' message.pk %}">
+                {% csrf_token %}
+                <button class="btn btn-table" type="submit">{% if message.is_resolved %}Reopen{% else %}Mark resolved{% endif %}</button>
+            </form>
+        </div>
+    </div>
+    <div class="card-panel-body">
+        <p class="mb-2" style="white-space:pre-line;">{{ message.message }}</p>
+        <a class="small" href="mailto:{{ message.email }}"><i class="fa-regular fa-envelope me-1"></i>{{ message.email }}</a>
+    </div>
+</div>
+{% empty %}
+<div class="card-panel"><div class="empty-state"><div class="empty-icon"><i class="fa-regular fa-envelope-open"></i></div><h3>No messages found</h3><p>Messages submitted through the public contact form will appear here.</p></div></div>
+{% endfor %}
+
+{% include "partials/pagination.html" %}
+{% endblock %}

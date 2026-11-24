@@ -1,0 +1,126 @@
+{% extends "base.html" %}
+{% block title %}About the consortium — GUCAIR{% endblock %}
+{% block content %}
+<section class="section-sm bg-surface border-bottom">
+    <div class="container">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb small mb-0">
+                <li class="breadcrumb-item"><a href="{% url 'core:landing' %}">Home</a></li>
+                <li class="breadcrumb-item active" aria-current="page">About</li>
+            </ol>
+        </nav>
+        <p class="eyebrow">About GUCAIR</p>
+        <h1 class="display-serif" style="font-size:clamp(2rem,3.6vw,2.9rem);color:var(--navy-950);">A shared, transparent approach to institutional AI readiness.</h1>
+        <p class="section-lead">The Global University Consortium of AI Readiness is an academic platform for structured self-assessment, peer comparison and practical improvement. It is designed for universities at every stage of AI adoption.</p>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-lg-4">
+                <div class="feature-card h-100">
+                    <div class="feature-icon"><i class="fa-solid fa-bullseye"></i></div>
+                    <h3>Mission</h3>
+                    <p>Provide universities with a rigorous, comparable and practical way to understand institutional AI readiness and convert that understanding into responsible action.</p>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="feature-card h-100">
+                    <div class="feature-icon"><i class="fa-solid fa-eye"></i></div>
+                    <h3>Vision</h3>
+                    <p>A global academic community where AI adoption is guided by evidence, shared standards, ethical governance and open peer learning.</p>
+                </div>
+            </div>
+            <div class="col-lg-4">
+                <div class="feature-card h-100">
+                    <div class="feature-icon"><i class="fa-solid fa-handshake-angle"></i></div>
+                    <h3>Values</h3>
+                    <p>Transparency in method, honesty about limitations, responsible use of data, institutional autonomy and collaboration across borders and disciplines.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section section-tint">
+    <div class="container">
+        <div class="row g-5">
+            <div class="col-lg-7">
+                <p class="eyebrow">The assessment instrument</p>
+                <h2 class="section-title">Six dimensions, 24 indicators, one consistent scale.</h2>
+                <p class="section-lead mb-4">Every institution answers the same 24 questions. This consistency is what makes comparison meaningful. Responses describe current institutional practice, not aspiration, and should be supported by evidence available to the responding team.</p>
+                <div class="table-responsive card-panel">
+                    <table class="table table-clean mb-0">
+                        <thead><tr><th style="width:70px;">Scale</th><th>Maturity level</th><th>What it means</th></tr></thead>
+                        <tbody>
+                            <tr><td class="fw-cell">0</td><td>Not Implemented</td><td>No activity, capability or formal arrangement exists.</td></tr>
+                            <tr><td class="fw-cell">1</td><td>Initial</td><td>Isolated experiments or informal activity without institutional support.</td></tr>
+                            <tr><td class="fw-cell">2</td><td>Developing</td><td>Defined activity in some units with partial resources and coordination.</td></tr>
+                            <tr><td class="fw-cell">3</td><td>Established</td><td>Institution-wide practice, documented and resourced with routine review.</td></tr>
+                            <tr><td class="fw-cell">4</td><td>Fully Implemented</td><td>Systematic, measured, continuously improved and externally recognised.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+                <div class="card-panel mt-4">
+                    <div class="card-panel-header"><h3>How scores are calculated</h3><span class="badge-soft badge-neutral">Documented method</span></div>
+                    <div class="card-panel-body">
+                        <p class="mb-2"><strong class="text-navy">Dimension score</strong> = (sum of dimension responses ÷ (4 × number of dimension questions)) × 100.</p>
+                        <p class="mb-2"><strong class="text-navy">Overall score</strong> = (sum of all responses ÷ (4 × 24)) × 100.</p>
+                        <p class="mb-0"><strong class="text-navy">Category</strong> = Initial (0–39), Developing (40–59), Advanced (60–79), Leading (80–100).</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="card-panel h-100">
+                    <div class="card-panel-header"><h3>Readiness dimensions</h3></div>
+                    <div class="card-panel-body">
+                        <ul class="list-unstyled mb-0">
+                            {% for key, label, description in dimensions %}
+                            <li class="d-flex gap-3 py-3 {% if not forloop.last %}border-bottom{% endif %}">
+                                <span class="feature-icon mb-0 flex-shrink-0">
+                                    {% if key == 'infrastructure' %}<i class="fa-solid fa-server"></i>
+                                    {% elif key == 'curriculum' %}<i class="fa-solid fa-graduation-cap"></i>
+                                    {% elif key == 'research' %}<i class="fa-solid fa-flask"></i>
+                                    {% elif key == 'faculty' %}<i class="fa-solid fa-chalkboard-user"></i>
+                                    {% elif key == 'governance' %}<i class="fa-solid fa-scale-balanced"></i>
+                                    {% else %}<i class="fa-solid fa-network-wired"></i>{% endif %}
+                                </span>
+                                <div>
+                                    <h4 class="fs-6 mb-1">{{ label }}</h4>
+                                    <p class="small text-muted-soft mb-0">{{ description }}</p>
+                                </div>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <div class="row g-5 align-items-start">
+            <div class="col-lg-6">
+                <p class="eyebrow">Data and limitations</p>
+                <h2 class="section-title">Honest about what this platform is — and is not.</h2>
+                <div class="alert alert-warning mb-3"><i class="fa-solid fa-triangle-exclamation me-2"></i><strong>Indicative assessment.</strong> GUCAIR readiness scores are self-reported, generated by this platform and intended for institutional reflection. They are <u>not</u> official accreditation, ranking or regulatory certification.</div>
+                <p class="text-muted-soft">Institutional records are visible only to authorised representatives of that institution and consortium administrators. Consortium analytics present aggregated data from approved institutions. Demonstration records, where present, are explicitly labelled and must not be interpreted as real consortium membership.</p>
+                <p class="text-muted-soft mb-0">The platform does not invent partnerships, endorsements, rankings or external affiliations. Resources are curated educational material; external links are references, not endorsements.</p>
+            </div>
+            <div class="col-lg-6">
+                <div class="cta-panel">
+                    <h2 class="mb-3">Ready to establish your baseline?</h2>
+                    <p class="mb-4">Registration creates a representative account and institutional profile. A consortium administrator reviews the institution before assessment access is enabled.</p>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <a class="btn btn-cyan" href="{% url 'accounts:register' %}">Register university</a>
+                        <a class="btn btn-ghost-light" href="{% url 'core:contact' %}">Contact secretariat</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

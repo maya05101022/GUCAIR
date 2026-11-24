@@ -1,0 +1,211 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Consortium analytics{% endblock %}
+{% block page_eyebrow %}Insights{% endblock %}
+{% block page_title %}Consortium analytics{% endblock %}
+{% block content %}
+<div class="page-head">
+    <div>
+        <h2>Consortium performance</h2>
+        <p>Statistics generated from stored university and assessment records.</p>
+    </div>
+    <div class="page-actions">
+        <a class="btn btn-sm btn-outline-navy" href="{% url 'analytics:comparison' %}"><i class="fa-solid fa-scale-balanced me-1"></i>Compare universities</a>
+        <a class="btn btn-sm btn-outline-navy" href="{% url 'analytics:summary_api' %}" target="_blank" rel="noopener"><i class="fa-solid fa-code me-1"></i>JSON summary</a>
+    </div>
+</div>
+
+{% if stats.demo_count %}
+<div class="alert alert-info d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <span><i class="fa-solid fa-circle-info me-2"></i>This dataset includes <strong>{{ stats.demo_count }} clearly-labelled demonstration institution{{ stats.demo_count|pluralize }}</strong>. Exclude them when interpreting real consortium performance.</span>
+    <a class="btn btn-sm btn-outline-navy" href="{% url 'universities:manage' %}?status=approved">Review institutions</a>
+</div>
+{% endif %}
+
+<div class="row g-3 mb-3">
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-card-top"><span class="label">Approved universities</span><span class="stat-icon"><i class="fa-solid fa-building-columns"></i></span></div>
+            <div class="stat-value">{{ stats.total_universities }}</div>
+            <div class="stat-foot">{{ stats.assessed_universities }} with completed assessments</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-card-top"><span class="label">Completed assessments</span><span class="stat-icon"><i class="fa-solid fa-clipboard-check"></i></span></div>
+            <div class="stat-value">{{ stats.total_assessments }}</div>
+            <div class="stat-foot">Across approved institutions</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-card-top"><span class="label">Average readiness</span><span class="stat-icon"><i class="fa-solid fa-gauge-high"></i></span></div>
+            <div class="stat-value">{{ stats.average_score|floatformat:1 }}<small>%</small></div>
+            <div class="stat-foot"><span class="badge-soft badge-{{ stats.average_category|lower }}">{{ stats.average_category }}</span> consortium average</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-card-top"><span class="label">Countries</span><span class="stat-icon"><i class="fa-solid fa-earth-americas"></i></span></div>
+            <div class="stat-value">{{ stats.countries }}</div>
+            <div class="stat-foot">{{ stats.total_representatives }} representative account{{ stats.total_representatives|pluralize }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-lg-7">
+        <div class="chart-card">
+            <h3>Dimension-wise performance</h3>
+            <p>Average score per readiness dimension across the latest assessment of each institution.</p>
+            <div class="chart-wrap"><canvas id="dimensionChart" aria-label="Dimension averages" role="img"></canvas></div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="chart-card">
+            <h3>Readiness category distribution</h3>
+            <p>Institutions by their latest overall readiness category.</p>
+            <div class="chart-wrap"><canvas id="categoryChart" aria-label="Category distribution" role="img"></canvas></div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-lg-5">
+        <div class="chart-card">
+            <h3>Assessment activity</h3>
+            <p>Completed assessments over the last six months.</p>
+            <div class="chart-wrap chart-wrap-sm"><canvas id="monthlyChart" aria-label="Monthly assessment activity" role="img"></canvas></div>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="card-panel h-100">
+            <div class="card-panel-header"><h3>Top performing institutions</h3><span class="text-xxs text-muted-soft">Latest score</span></div>
+            <div class="table-wrap">
+                <table class="table table-clean">
+                    <thead><tr><th>Rank</th><th>University</th><th>Country</th><th>Score</th><th>Category</th></tr></thead>
+                    <tbody>
+                        {% for item in stats.top_universities %}
+                        <tr>
+                            <td>{{ forloop.counter }}</td>
+                            <td class="fw-cell"><a href="{{ item.get_absolute_url }}">{{ item.name|truncatechars:34 }}</a>{% if item.is_demo %} <span class="badge-soft badge-demo">Demo</span>{% endif %}</td>
+                            <td>{{ item.country }}</td>
+                            <td><span class="fw-semibold text-navy">{{ item.latest_result_score|floatformat:1 }}%</span></td>
+                            <td><span class="badge-soft badge-{{ item.latest_result_category|lower }}">{{ item.latest_result_category }}</span></td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="5"><p class="small text-muted-soft mb-0 p-3">No completed assessments yet. Rankings appear as institutions submit results.</p></td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="card-panel">
+    <div class="card-panel-header"><h3>Country-wise statistics</h3><span class="text-xxs text-muted-soft">All approved institutions</span></div>
+    <div class="table-wrap">
+        <table class="table table-clean">
+            <thead><tr><th>Country</th><th>Universities</th><th>Assessed</th><th>Average readiness</th><th>Coverage</th></tr></thead>
+            <tbody>
+                {% for row in stats.by_country %}
+                <tr>
+                    <td class="fw-cell">{{ row.country }}</td>
+                    <td>{{ row.count }}</td>
+                    <td>{{ row.assessed }}</td>
+                    <td>{% if row.average is not None %}{{ row.average|floatformat:1 }}%{% else %}<span class="text-muted-soft">—</span>{% endif %}</td>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <div class="progress-thin flex-grow-1" style="max-width:100px;"><span style="width:{% widthratio row.assessed row.count 100 %}%"></span></div>
+                            <span class="text-xxs text-muted-soft">{% widthratio row.assessed row.count 100 %}%</span>
+                        </div>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="5"><p class="small text-muted-soft mb-0 p-3">No country statistics are available yet.</p></td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+{{ stats.dimensions|json_script:"dimensionData" }}
+{{ stats.categories|json_script:"categoryData" }}
+{{ stats.monthly|json_script:"monthlyData" }}
+<script>
+(function () {
+    if (!window.Chart) return;
+    const base = window.GUCAIR.baseOptions();
+    const dimensions = JSON.parse(document.getElementById("dimensionData").textContent);
+    const categories = JSON.parse(document.getElementById("categoryData").textContent);
+    const monthly = JSON.parse(document.getElementById("monthlyData").textContent);
+    const navy = "#0a2240";
+
+    const dimOptions = JSON.parse(JSON.stringify(base));
+    dimOptions.indexAxis = "y";
+    dimOptions.plugins.legend.display = false;
+    dimOptions.scales.x.max = 100;
+    dimOptions.scales.x.ticks.callback = (v) => v + "%";
+    dimOptions.scales.y.grid.display = false;
+    dimOptions.plugins.tooltip.callbacks = { label: (ctx) => ctx.parsed.x.toFixed(1) + "% average" };
+    new Chart(document.getElementById("dimensionChart"), {
+        type: "bar",
+        data: {
+            labels: dimensions.map((d) => d.short_label),
+            datasets: [{
+                data: dimensions.map((d) => d.average),
+                backgroundColor: ["#0e2c52", "#1f9bb5", "#3d6f9e", "#5b89ad", "#7aa7b8", "#a8c3cf"],
+                borderRadius: 5,
+                barThickness: 20
+            }]
+        },
+        options: dimOptions
+    });
+
+    const catOptions = JSON.parse(JSON.stringify(base));
+    catOptions.cutout = "66%";
+    catOptions.scales = {};
+    catOptions.plugins.legend.position = "bottom";
+    catOptions.plugins.tooltip.callbacks = { label: (ctx) => " " + ctx.label + ": " + ctx.parsed + " institution(s)" };
+    new Chart(document.getElementById("categoryChart"), {
+        type: "doughnut",
+        data: {
+            labels: categories.map((c) => c.label),
+            datasets: [{
+                data: categories.map((c) => c.count),
+                backgroundColor: ["#b23b3b", "#b5852f", "#3d6f9e", "#1f7a54"],
+                borderWidth: 2,
+                borderColor: "#fff",
+                hoverOffset: 4
+            }]
+        },
+        options: catOptions
+    });
+
+    const monthlyOptions = JSON.parse(JSON.stringify(base));
+    monthlyOptions.plugins.legend.display = false;
+    monthlyOptions.scales.y.ticks.precision = 0;
+    monthlyOptions.plugins.tooltip.callbacks = { label: (ctx) => ctx.parsed.y + " assessment(s)" };
+    new Chart(document.getElementById("monthlyChart"), {
+        type: "line",
+        data: {
+            labels: monthly.map((m) => m.label),
+            datasets: [{
+                data: monthly.map((m) => m.count),
+                borderColor: "#1f9bb5",
+                backgroundColor: "rgba(31,155,181,.10)",
+                fill: true,
+                tension: .3,
+                borderWidth: 2.5,
+                pointRadius: 3.5,
+                pointBackgroundColor: navy
+            }]
+        },
+        options: monthlyOptions
+    });
+})();
+</script>
+{% endblock %}

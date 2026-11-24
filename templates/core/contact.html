@@ -1,0 +1,66 @@
+{% extends "base.html" %}
+{% block title %}Contact the secretariat — GUCAIR{% endblock %}
+{% block content %}
+<section class="section-sm bg-surface border-bottom">
+    <div class="container">
+        <p class="eyebrow">Contact</p>
+        <h1 class="display-serif" style="font-size:clamp(2rem,3.4vw,2.7rem);color:var(--navy-950);">Talk to the consortium secretariat.</h1>
+        <p class="section-lead">Questions about institutional registration, assessment access, data handling or the resource library are welcome.</p>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <div class="row g-4">
+            <div class="col-lg-7">
+                <div class="card-panel">
+                    <div class="card-panel-header"><h2>Send a message</h2><span class="badge-soft badge-neutral">Stored securely</span></div>
+                    <div class="card-panel-body">
+                        <form method="post" novalidate>
+                            {% csrf_token %}
+                            <div class="row g-3">
+                                <div class="col-md-6">{% include "partials/field.html" with field=form.name %}</div>
+                                <div class="col-md-6">{% include "partials/field.html" with field=form.email %}</div>
+                                <div class="col-md-6">{% include "partials/field.html" with field=form.organization %}</div>
+                                <div class="col-md-6">{% include "partials/field.html" with field=form.subject %}</div>
+                                <div class="col-12">{% include "partials/field.html" with field=form.message %}</div>
+                            </div>
+                            <div class="d-flex align-items-center gap-3 mt-2">
+                                <button type="submit" class="btn btn-navy"><i class="fa-regular fa-paper-plane me-2"></i>Submit message</button>
+                                <span class="text-xxs text-muted-soft">Messages are reviewed by consortium administrators.</span>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-5">
+                <div class="card-panel mb-3">
+                    <div class="card-panel-body">
+                        <div class="feature-icon"><i class="fa-regular fa-envelope"></i></div>
+                        <h3 class="fs-6 mb-1">Email the secretariat</h3>
+                        <p class="small text-muted-soft mb-2">For institutional correspondence and data requests.</p>
+                        <a href="mailto:{{ site_email }}">{{ site_email }}</a>
+                    </div>
+                </div>
+                <div class="card-panel mb-3">
+                    <div class="card-panel-body">
+                        <div class="feature-icon"><i class="fa-solid fa-user-shield"></i></div>
+                        <h3 class="fs-6 mb-1">Institutional data</h3>
+                        <p class="small text-muted-soft mb-0">Assessment records are visible only to authorised representatives of the institution and platform administrators.</p>
+                    </div>
+                </div>
+                <div class="card-panel">
+                    <div class="card-panel-body">
+                        <h3 class="fs-6 mb-2">Already a member?</h3>
+                        <p class="small text-muted-soft">Sign in to access your dashboard, complete an assessment or review your institution's readiness history.</p>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <a class="btn btn-sm btn-navy" href="{% url 'accounts:login' %}">Sign in</a>
+                            <a class="btn btn-sm btn-outline-navy" href="{% url 'accounts:register' %}">Register university</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

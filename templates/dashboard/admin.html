@@ -1,0 +1,181 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Platform overview{% endblock %}
+{% block page_eyebrow %}Administration{% endblock %}
+{% block page_title %}Platform overview{% endblock %}
+{% block content %}
+<div class="page-head">
+    <div>
+        <h2>Good to see you, {{ user.get_short_name|default:user.username }}</h2>
+        <p>Consortium administration · live figures from the platform database</p>
+    </div>
+    <div class="page-actions">
+        <a class="btn btn-sm btn-outline-navy" href="{% url 'analytics:dashboard' %}"><i class="fa-solid fa-chart-column me-1"></i>Analytics</a>
+        <a class="btn btn-sm btn-navy" href="{% url 'universities:manage' %}?status=pending"><i class="fa-solid fa-check-double me-1"></i>Review approvals</a>
+    </div>
+</div>
+
+{% if pending_universities %}
+<div class="alert alert-warning d-flex justify-content-between align-items-center flex-wrap gap-2">
+    <span><i class="fa-solid fa-clock me-2"></i><strong>{{ pending_universities }} university registration{{ pending_universities|pluralize }} awaiting review.</strong> Approve or reject submissions to manage assessment access.</span>
+    <a class="btn btn-sm btn-outline-navy" href="{% url 'universities:manage' %}?status=pending">Open approval queue</a>
+</div>
+{% endif %}
+
+<div class="row g-3 mb-3">
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-card-top"><span class="label">Universities</span><span class="stat-icon"><i class="fa-solid fa-building-columns"></i></span></div>
+            <div class="stat-value">{{ total_universities }}</div>
+            <div class="stat-foot">{{ approved_universities }} approved · {{ pending_universities }} pending</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-card-top"><span class="label">Assessments</span><span class="stat-icon"><i class="fa-solid fa-clipboard-check"></i></span></div>
+            <div class="stat-value">{{ total_assessments }}</div>
+            <div class="stat-foot">{{ assessments_this_month }} submitted this month</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-card-top"><span class="label">Average readiness</span><span class="stat-icon"><i class="fa-solid fa-gauge-high"></i></span></div>
+            <div class="stat-value">{% if average_score %}{{ average_score|floatformat:1 }}<small>%</small>{% else %}—{% endif %}</div>
+            <div class="stat-foot">Mean of all submitted assessments</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-card-top"><span class="label">Resource library</span><span class="stat-icon"><i class="fa-solid fa-book-open"></i></span></div>
+            <div class="stat-value">{{ published_resources }}<small>/{{ total_resources }}</small></div>
+            <div class="stat-foot">{{ open_messages }} open contact message{{ open_messages|pluralize }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3 mb-3">
+    <div class="col-lg-7">
+        <div class="card-panel h-100">
+            <div class="card-panel-header"><h3>Approval queue</h3><a class="text-xxs" href="{% url 'universities:manage' %}?status=pending">View all</a></div>
+            <div class="table-wrap">
+                <table class="table table-clean">
+                    <thead><tr><th>University</th><th>Location</th><th>Submitted</th><th class="text-end">Action</th></tr></thead>
+                    <tbody>
+                        {% for item in pending_list %}
+                        <tr>
+                            <td><div class="fw-cell">{{ item.name|truncatechars:36 }}</div><div class="text-xxs text-muted-soft">{{ item.created_by.username|default:"—" }}</div></td>
+                            <td>{{ item.city }}, {{ item.country }}</td>
+                            <td>{{ item.created_at|date:"d M Y" }}</td>
+                            <td class="text-end">
+                                <div class="table-actions justify-content-end">
+                                    <form method="post" action="{% url 'universities:approve' item.pk %}">
+                                        {% csrf_token %}
+                                        <input type="hidden" name="next" value="{% url 'dashboard:admin_home' %}">
+                                        <button class="btn btn-table" type="submit">Approve</button>
+                                    </form>
+                                    <a class="btn btn-table" href="{% url 'universities:admin_edit' item.pk %}">Review</a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="4"><p class="small text-muted-soft mb-0 p-3">No registrations are awaiting review.</p></td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="chart-card">
+            <h3>Institutional readiness mix</h3>
+            <p>Approved universities by latest assessment category.</p>
+            <div class="chart-wrap chart-wrap-sm"><canvas id="adminCategoryChart" aria-label="Readiness category mix" role="img"></canvas></div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-7">
+        <div class="card-panel mb-3">
+            <div class="card-panel-header"><h3>Recent assessment submissions</h3><a class="text-xxs" href="{% url 'assessments:manage' %}">Manage</a></div>
+            <div class="table-wrap">
+                <table class="table table-clean">
+                    <thead><tr><th>University</th><th>Score</th><th>Category</th><th>Date</th></tr></thead>
+                    <tbody>
+                        {% for item in recent_assessments %}
+                        <tr>
+                            <td class="fw-cell"><a href="{% url 'assessments:detail' item.pk %}">{{ item.university.name|truncatechars:36 }}</a></td>
+                            <td>{{ item.overall_score|floatformat:1 }}%</td>
+                            <td><span class="badge-soft badge-{{ item.category|lower }}">{{ item.category }}</span></td>
+                            <td>{{ item.created_at|date:"d M Y" }}</td>
+                        </tr>
+                        {% empty %}
+                        <tr><td colspan="4"><p class="small text-muted-soft mb-0 p-3">No assessments have been submitted yet.</p></td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="card-panel">
+            <div class="card-panel-header"><h3>Quick actions</h3></div>
+            <div class="card-panel-body">
+                <div class="row g-2">
+                    <div class="col-sm-6"><a class="feature-card d-flex align-items-center gap-2 p-3 text-decoration-none" href="{% url 'universities:manage' %}"><span class="feature-icon mb-0"><i class="fa-solid fa-building-columns"></i></span><span class="small fw-semibold text-navy">Manage universities</span></a></div>
+                    <div class="col-sm-6"><a class="feature-card d-flex align-items-center gap-2 p-3 text-decoration-none" href="{% url 'accounts:user_list' %}"><span class="feature-icon mb-0"><i class="fa-solid fa-users"></i></span><span class="small fw-semibold text-navy">Users and roles</span></a></div>
+                    <div class="col-sm-6"><a class="feature-card d-flex align-items-center gap-2 p-3 text-decoration-none" href="{% url 'resources:create' %}"><span class="feature-icon mb-0"><i class="fa-solid fa-plus"></i></span><span class="small fw-semibold text-navy">Publish resource</span></a></div>
+                    <div class="col-sm-6"><a class="feature-card d-flex align-items-center gap-2 p-3 text-decoration-none" href="{% url 'core:contact_messages' %}"><span class="feature-icon mb-0"><i class="fa-regular fa-envelope"></i></span><span class="small fw-semibold text-navy">Contact messages</span></a></div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-5">
+        <div class="card-panel">
+            <div class="card-panel-header"><h3>Recently updated resources</h3><a class="text-xxs" href="{% url 'resources:manage' %}">Manage</a></div>
+            <div class="panel-body p-0">
+                <table class="table table-clean mb-0">
+                    <tbody>
+                        {% for resource in recent_resources %}
+                        <tr>
+                            <td>
+                                <a class="fw-cell" href="{{ resource.get_absolute_url }}">{{ resource.title|truncatechars:40 }}</a>
+                                <div class="text-xxs text-muted-soft">{{ resource.get_category_display }} · {{ resource.updated_at|date:"d M Y" }}</div>
+                            </td>
+                            <td class="text-end"><span class="badge-soft {% if resource.is_published %}badge-approved{% else %}badge-draft{% endif %}">{% if resource.is_published %}Live{% else %}Draft{% endif %}</span></td>
+                        </tr>
+                        {% empty %}
+                        <tr><td><p class="small text-muted-soft mb-0 p-3">No resources yet.</p></td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+        <div class="alert alert-info mt-3 small mb-0"><i class="fa-solid fa-shield-halved me-2"></i>Administrator actions are role-restricted and CSRF-protected. Institutional deletions require exact-name confirmation.</div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+<script>
+(function () {
+    if (!window.Chart) return;
+    const options = window.GUCAIR.baseOptions();
+    options.cutout = "64%";
+    options.scales = {};
+    options.plugins.legend.position = "bottom";
+    options.plugins.tooltip.callbacks = { label: (ctx) => " " + ctx.label + ": " + ctx.parsed + " institution(s)" };
+    new Chart(document.getElementById("adminCategoryChart"), {
+        type: "doughnut",
+        data: {
+            labels: ["Initial", "Developing", "Advanced", "Leading"],
+            datasets: [{
+                data: [{{ category_counts.Initial }}, {{ category_counts.Developing }}, {{ category_counts.Advanced }}, {{ category_counts.Leading }}],
+                backgroundColor: ["#b23b3b", "#b5852f", "#3d6f9e", "#1f7a54"],
+                borderWidth: 2,
+                borderColor: "#fff"
+            }]
+        },
+        options: options
+    });
+})();
+</script>
+{% endblock %}

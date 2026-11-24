@@ -1,0 +1,206 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Dashboard{% endblock %}
+{% block page_eyebrow %}Institutional workspace{% endblock %}
+{% block page_title %}Dashboard{% endblock %}
+{% block content %}
+<div class="page-head">
+    <div>
+        <h2>Welcome, {{ user.get_short_name|default:user.username }}</h2>
+        <p>{% if university %}{{ university.name }}{% else %}Complete your institutional registration to begin.{% endif %}</p>
+    </div>
+    <div class="page-actions">
+        {% if university and university.is_approved %}
+        <a class="btn btn-sm btn-navy" href="{% url 'assessments:take' %}"><i class="fa-solid fa-circle-plus me-1"></i>{% if latest %}Reassess{% else %}Start assessment{% endif %}</a>
+        {% endif %}
+        <a class="btn btn-sm btn-outline-navy" href="{% url 'accounts:profile' %}"><i class="fa-regular fa-user me-1"></i>Profile</a>
+    </div>
+</div>
+
+{% if not university %}
+<div class="alert alert-warning"><i class="fa-solid fa-building-columns me-2"></i><strong>No institution linked.</strong> Register your university profile to unlock assessment and analytics features. <a href="{% url 'universities:create' %}">Register now</a>.</div>
+{% elif university.status == 'pending' %}
+<div class="alert alert-warning"><i class="fa-solid fa-clock me-2"></i><strong>Registration awaiting approval.</strong> Your institutional profile is under review. Assessments unlock once an administrator approves {{ university.name }}.</div>
+{% elif university.status == 'rejected' %}
+<div class="alert alert-danger"><i class="fa-solid fa-circle-xmark me-2"></i><strong>Registration not approved.</strong> {% if university.review_note %}{{ university.review_note }}{% endif %} Update your profile and contact the secretariat for re-review.</div>
+{% endif %}
+
+<div class="row g-3 mb-3">
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-card-top"><span class="label">Overall readiness</span><span class="stat-icon"><i class="fa-solid fa-gauge-high"></i></span></div>
+            <div class="stat-value">{% if latest %}{{ latest.overall_score|floatformat:1 }}<small>%</small>{% else %}—{% endif %}</div>
+            <div class="stat-foot">{% if latest %}<span class="badge-soft badge-{{ latest.category|lower }}">{{ latest.category }}</span>{% else %}No assessment yet{% endif %}</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-card-top"><span class="label">Best score</span><span class="stat-icon"><i class="fa-solid fa-trophy"></i></span></div>
+            <div class="stat-value">{% if best_score %}{{ best_score|floatformat:1 }}<small>%</small>{% else %}—{% endif %}</div>
+            <div class="stat-foot">Across {{ assessment_count }} attempt{{ assessment_count|pluralize }}</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-card-top"><span class="label">Trend</span><span class="stat-icon"><i class="fa-solid fa-chart-line"></i></span></div>
+            <div class="stat-value">{% if delta is not None %}{% if delta > 0 %}<span class="trend-up">+{{ delta|floatformat:1 }}</span>{% elif delta < 0 %}<span class="trend-down">{{ delta|floatformat:1 }}</span>{% else %}0.0{% endif %}{% else %}—{% endif %}</div>
+            <div class="stat-foot">Points vs previous assessment</div>
+        </div>
+    </div>
+    <div class="col-6 col-lg-3">
+        <div class="stat-card">
+            <div class="stat-card-top"><span class="label">Profile completion</span><span class="stat-icon"><i class="fa-solid fa-list-check"></i></span></div>
+            <div class="stat-value">{{ profile_completion }}<small>%</small></div>
+            <div class="stat-foot"><a href="{% url 'accounts:profile' %}">Review account details</a></div>
+        </div>
+    </div>
+</div>
+
+<div class="row g-3">
+    <div class="col-lg-8">
+        {% if latest %}
+        <div class="card-panel mb-3">
+            <div class="card-panel-header">
+                <h3>Latest readiness result</h3>
+                <div class="d-flex align-items-center gap-2">
+                    <span class="badge-soft badge-{{ latest.category|lower }}">{{ latest.category }}</span>
+                    <a class="text-xxs" href="{% url 'assessments:detail' latest.pk %}">Full result</a>
+                </div>
+            </div>
+            <div class="card-panel-body">
+                <div class="d-flex align-items-center gap-4 flex-wrap mb-3">
+                    <div class="score-ring" style="--value: {{ latest.overall_score }}; --ring: {% if latest.category == 'Initial' %}#b23b3b{% elif latest.category == 'Developing' %}#b5852f{% elif latest.category == 'Advanced' %}#3d6f9e{% else %}#1f7a54{% endif %};">
+                        <div class="score-ring-inner"><strong>{{ latest.overall_score|floatformat:0 }}<span class="fs-6">%</span></strong><span>Overall</span></div>
+                    </div>
+                    <div class="flex-grow-1">
+                        <p class="mb-1"><strong class="text-navy">Assessed {{ latest.created_at|date:"d F Y" }}</strong></p>
+                        <p class="small text-muted-soft mb-2">{{ latest.total_raw_score }} of {{ latest.max_raw_score }} raw maturity points across 24 indicators.</p>
+                        <div class="d-flex gap-2 flex-wrap">
+                            <a class="btn btn-sm btn-navy" href="{% url 'assessments:take' %}"><i class="fa-solid fa-rotate me-1"></i>Reassess</a>
+                            <a class="btn btn-sm btn-outline-navy" href="{% url 'assessments:history' %}">Assessment history</a>
+                        </div>
+                    </div>
+                </div>
+                <div class="row g-2">
+                    {% for result in results %}
+                    <div class="col-sm-6">
+                        <div class="dim-result">
+                            <div class="dim-result-head"><p class="dim-result-name">{{ result.get_dimension_display }}</p><span class="dim-result-score">{{ result.score|floatformat:0 }}<small>%</small></span></div>
+                            <div class="progress-thin"><span style="width: {{ result.score }}%"></span></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="card-panel mb-3">
+            <div class="empty-state">
+                <div class="empty-icon"><i class="fa-solid fa-clipboard-check"></i></div>
+                <h3>Your readiness baseline is waiting</h3>
+                <p>{% if university.is_approved %}Complete the six-dimension assessment to generate your institutional score, dimension profile and prioritised recommendations.{% else %}Once your institution is approved, you can complete the readiness assessment and access consortium analytics.{% endif %}</p>
+                {% if university.is_approved %}<a class="btn btn-navy" href="{% url 'assessments:take' %}">Start assessment</a>
+                {% else %}<a class="btn btn-outline-navy" href="{{ university.get_absolute_url }}">View submitted profile</a>{% endif %}
+            </div>
+        </div>
+        {% endif %}
+
+        {% if recommendations %}
+        <div class="card-panel mb-3">
+            <div class="card-panel-header"><h3>Improvement recommendations</h3><span class="text-xxs text-muted-soft">Prioritised by lowest dimension</span></div>
+            <div class="card-panel-body">
+                {% for rec in recommendations %}
+                <div class="recommendation">
+                    <span class="rec-rank">{{ forloop.counter }}</span>
+                    <div>
+                        <h4>{{ rec.label }} <span class="badge-soft badge-{{ rec.category|lower }} ms-1">{{ rec.score|floatformat:0 }}%</span></h4>
+                        <p>{{ rec.advice }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="card-panel">
+            <div class="card-panel-header"><h3>Recent activity</h3><a class="text-xxs" href="{% url 'assessments:history' %}">All history</a></div>
+            <div class="card-panel-body">
+                {% if assessment_history %}
+                <ul class="timeline mb-0">
+                    {% for item in assessment_history %}
+                    <li class="{% if forloop.first %}is-latest{% endif %}">
+                        <p class="t-title"><a href="{% url 'assessments:detail' item.pk %}">Assessment submitted · {{ item.overall_score|floatformat:1 }}% ({{ item.category }})</a></p>
+                        <p class="t-meta">{{ item.created_at|date:"d M Y, H:i" }} · {{ item.total_raw_score }}/{{ item.max_raw_score }} raw points</p>
+                    </li>
+                    {% endfor %}
+                    {% if university %}
+                    <li>
+                        <p class="t-title">Institutional profile registered</p>
+                        <p class="t-meta">{{ university.created_at|date:"d M Y" }} · {{ university.get_status_display }}</p>
+                    </li>
+                    {% endif %}
+                </ul>
+                {% else %}
+                <ul class="timeline mb-0">
+                    <li><p class="t-title">Account created</p><p class="t-meta">{{ user.date_joined|date:"d M Y" }} · {{ user_profile.get_role_display }}</p></li>
+                    {% if university %}<li><p class="t-title">Institutional profile registered</p><p class="t-meta">{{ university.created_at|date:"d M Y" }} · {{ university.get_status_display }}</p></li>{% endif %}
+                </ul>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card-panel mb-3">
+            <div class="card-panel-header"><h3>Institution</h3>{% if university %}<a class="text-xxs" href="{{ university.get_absolute_url }}">View</a>{% endif %}</div>
+            <div class="card-panel-body">
+                {% if university %}
+                <div class="d-flex align-items-center gap-2 mb-3">
+                    <span class="uni-monogram">{{ university.name|slice:":2"|upper }}</span>
+                    <div class="minw-0">
+                        <h4 class="fs-6 mb-0">{{ university.name|truncatechars:34 }}</h4>
+                        <p class="text-xxs text-muted-soft mb-0">{{ university.city }}, {{ university.country }}</p>
+                    </div>
+                </div>
+                <ul class="list-unstyled small mb-0">
+                    <li class="d-flex justify-content-between py-2 border-bottom"><span class="text-muted-soft">Status</span><span class="badge-soft badge-{{ university.status }}">{{ university.get_status_display }}</span></li>
+                    <li class="d-flex justify-content-between py-2 border-bottom"><span class="text-muted-soft">Assessments</span><strong>{{ assessment_count }}</strong></li>
+                    <li class="d-flex justify-content-between py-2"><span class="text-muted-soft">Last assessed</span><strong>{{ last_assessed|date:"d M Y"|default:"—" }}</strong></li>
+                </ul>
+                {% if university.status == 'pending' %}<p class="text-xxs text-muted-soft mt-2 mb-0">A consortium administrator reviews new registrations before assessment access is enabled.</p>{% endif %}
+                {% else %}
+                <p class="small text-muted-soft">No institution is linked to your account.</p>
+                <a class="btn btn-sm btn-navy" href="{% url 'universities:create' %}">Register university</a>
+                {% endif %}
+            </div>
+        </div>
+
+        <div class="card-panel mb-3">
+            <div class="card-panel-header"><h3>Profile checklist</h3><span class="text-xxs text-muted-soft">{{ profile_completion }}%</span></div>
+            <div class="card-panel-body">
+                <ul class="checklist">
+                    <li><i class="fa-solid {% if profile_obj.job_title %}fa-circle-check done{% else %}fa-circle todo{% endif %}"></i><span>Add your job title</span></li>
+                    <li><i class="fa-solid {% if profile_obj.phone %}fa-circle-check done{% else %}fa-circle todo{% endif %}"></i><span>Add a contact phone number</span></li>
+                    <li><i class="fa-solid {% if university.website %}fa-circle-check done{% else %}fa-circle todo{% endif %}"></i><span>Add the institutional website</span></li>
+                    <li><i class="fa-solid {% if university.description|length >= 120 %}fa-circle-check done{% else %}fa-circle todo{% endif %}"></i><span>Write a detailed institutional description</span></li>
+                    <li><i class="fa-solid {% if latest %}fa-circle-check done{% else %}fa-circle todo{% endif %}"></i><span>Complete the readiness assessment</span></li>
+                </ul>
+                <a class="btn btn-sm btn-outline-navy w-100 mt-3" href="{% url 'accounts:profile' %}">Update profile</a>
+            </div>
+        </div>
+
+        <div class="card-panel">
+            <div class="card-panel-header"><h3>From the resource hub</h3><a class="text-xxs" href="{% url 'resources:list' %}">Browse</a></div>
+            <div class="card-panel-body">
+                {% for resource in recent_resources %}
+                <a class="d-block py-2 {% if not forloop.last %}border-bottom{% endif %}" href="{{ resource.get_absolute_url }}">
+                    <p class="small fw-semibold text-navy mb-0">{{ resource.title|truncatechars:52 }}</p>
+                    <p class="text-xxs text-muted-soft mb-0">{{ resource.get_category_display }}</p>
+                </a>
+                {% empty %}
+                <p class="small text-muted-soft mb-0">No resources published yet.</p>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

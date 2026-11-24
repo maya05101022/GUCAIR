@@ -1,0 +1,319 @@
+{% extends "base.html" %}
+{% load static humanize %}
+
+{% block title %}GUCAIR — Global University Consortium of AI Readiness{% endblock %}
+
+{% block content %}
+<section class="hero">
+    <div class="container">
+        <div class="row align-items-center g-5">
+            <div class="col-lg-6">
+                <span class="hero-eyebrow"><span class="dot"><i class="fa-solid fa-earth-americas"></i></span>International academic consortium · AI readiness</span>
+                <h1 class="display-serif">A shared standard for university <em>AI readiness</em>.</h1>
+                <p class="hero-lead">GUCAIR brings universities together to evaluate, monitor and strengthen institutional readiness for artificial intelligence — through one transparent six-dimension assessment and a growing library of governance and learning resources.</p>
+                <div class="hero-actions">
+                    <a class="btn btn-navy" href="{% url 'accounts:register' %}"><i class="fa-solid fa-building-columns me-2"></i>Register your university</a>
+                    <a class="btn btn-outline-navy" href="#dimensions">Explore the framework <i class="fa-solid fa-arrow-down ms-1"></i></a>
+                </div>
+                <div class="hero-trust">
+                    <div><i class="fa-solid fa-check"></i>24-question institutional instrument</div>
+                    <div><i class="fa-solid fa-check"></i>Transparent 0–100 scoring</div>
+                    <div><i class="fa-solid fa-check"></i>Governed institutional data</div>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="snapshot-card">
+                    <div class="snapshot-head">
+                        <span class="small-caps">Consortium snapshot</span>
+                        <span class="text-xxs text-muted-soft"><span class="live-dot"></span>From live records</span>
+                    </div>
+                    <div class="snapshot-body">
+                        <div class="d-flex align-items-center gap-4 mb-3 flex-wrap">
+                            <div class="score-ring" style="--value: {{ stats.average_score }}; --ring: #1f9bb5;">
+                                <div class="score-ring-inner">
+                                    <strong>{{ stats.average_score|floatformat:0 }}<span class="fs-6">%</span></strong>
+                                    <span>Avg. readiness</span>
+                                </div>
+                            </div>
+                            <div class="flex-grow-1 minw-0">
+                                <p class="mb-1 small text-navy fw-semibold">Institutional AI readiness across participating universities</p>
+                                <p class="mb-2 text-xxs text-muted-soft">Self-reported, normalised to 0–100. Not an accreditation decision.</p>
+                                <div class="d-flex gap-2 flex-wrap">
+                                    <span class="badge-soft badge-approved"><i class="fa-solid fa-building-columns"></i>{{ stats.university_count }} universities</span>
+                                    <span class="badge-soft badge-neutral"><i class="fa-solid fa-earth-americas"></i>{{ stats.country_count }} countries</span>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-6"><div class="mini-stat"><strong>{{ stats.assessment_count }}</strong><span>Completed assessments</span></div></div>
+                            <div class="col-6"><div class="mini-stat"><strong>{{ stats.assessment_coverage }}%</strong><span>Participation coverage</span></div></div>
+                        </div>
+                        <div>
+                            {% for dimension in stats.dimensions|slice:":4" %}
+                            <div class="dimension-bar">
+                                <div class="dimension-bar-head"><span>{{ dimension.short_label }}</span><span>{{ dimension.average|floatformat:1 }}%</span></div>
+                                <div class="progress-thin"><span style="width: {{ dimension.average }}%"></span></div>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                    <div class="snapshot-foot">
+                        <span>Six dimensions · 24 indicators</span>
+                        <a class="link-arrow" href="{% url 'analytics:dashboard' %}">View analytics <i class="fa-solid fa-arrow-right"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="stats-band">
+    <div class="container">
+        <div class="row g-0 py-3">
+            <div class="col-6 col-lg-3"><div class="stat-block"><strong>{{ stats.university_count }}</strong><span>Approved universities</span></div></div>
+            <div class="col-6 col-lg-3"><div class="stat-block"><strong>{{ stats.country_count }}</strong><span>Countries represented</span></div></div>
+            <div class="col-6 col-lg-3"><div class="stat-block"><strong>{{ stats.assessment_count }}</strong><span>Completed assessments</span></div></div>
+            <div class="col-6 col-lg-3"><div class="stat-block"><strong>{{ stats.average_score|floatformat:1 }}<small class="fs-5">%</small></strong><span>Average readiness score</span></div></div>
+        </div>
+    </div>
+</section>
+
+<section class="section section-anchor" id="about">
+    <div class="container">
+        <div class="row g-5 align-items-start">
+            <div class="col-lg-6">
+                <p class="eyebrow">About the consortium</p>
+                <h2 class="section-title">An international platform for evidence-based AI readiness.</h2>
+                <p class="section-lead mb-3">GUCAIR is a consortium platform for universities that want a structured, comparable and honest view of their institutional AI capability. It supports a shared vocabulary across academic leadership, IT, research and governance teams.</p>
+                <p class="text-muted-soft">Universities register an institutional profile, complete the six-dimension readiness assessment, and receive an automatically calculated score. Members can then review their history, compare practice and use the resource hub to plan improvement. Every score on this platform is derived from records in the consortium database.</p>
+                <div class="alert alert-warning mt-3 mb-0">
+                    <i class="fa-solid fa-circle-info me-2"></i>Readiness results are indicative, self-reported and generated by the platform. They are not official university accreditation.
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <div class="feature-card h-100">
+                            <div class="feature-icon"><i class="fa-solid fa-bullseye"></i></div>
+                            <h3>Our mission</h3>
+                            <p>Give universities a practical, comparable and transparent way to understand and improve institutional AI readiness.</p>
+                        </div>
+                    </div>
+                    <div class="col-md-6">
+                        <div class="feature-card h-100">
+                            <div class="feature-icon"><i class="fa-solid fa-eye"></i></div>
+                            <h3>Our vision</h3>
+                            <p>A global academic community where responsible AI adoption is guided by evidence, shared standards and peer learning.</p>
+                        </div>
+                    </div>
+                    <div class="col-12">
+                        <div class="card-panel">
+                            <div class="card-panel-header"><h3>Platform objectives</h3><span class="badge-soft badge-neutral">Four commitments</span></div>
+                            <div class="card-panel-body">
+                                <ul class="checklist">
+                                    <li><i class="fa-solid fa-circle-check done"></i><span><strong class="text-navy">Assess</strong> institutional readiness across infrastructure, curriculum, research, faculty, governance and adoption.</span></li>
+                                    <li><i class="fa-solid fa-circle-check done"></i><span><strong class="text-navy">Benchmark</strong> performance against consortium peers using consistent, documented scoring.</span></li>
+                                    <li><i class="fa-solid fa-circle-check done"></i><span><strong class="text-navy">Improve</strong> with prioritised recommendations and a curated AI governance and learning library.</span></li>
+                                    <li><i class="fa-solid fa-circle-check done"></i><span><strong class="text-navy">Collaborate</strong> through a governed international community of university representatives.</span></li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section section-tint section-anchor" id="dimensions">
+    <div class="container">
+        <div class="section-head-row">
+            <div>
+                <p class="eyebrow">The readiness framework</p>
+                <h2 class="section-title">Six dimensions of institutional AI readiness</h2>
+                <p class="section-lead">Each dimension carries four weighted-equally indicators scored on the same maturity scale, producing comparable 0–100 results.</p>
+            </div>
+            <a class="btn btn-outline-navy d-none d-md-inline-flex" href="{% url 'core:about' %}">Framework methodology <i class="fa-solid fa-arrow-right ms-1"></i></a>
+        </div>
+        <div class="row g-3">
+            {% for key, label, description in dimensions %}
+            <div class="col-md-6 col-lg-4">
+                <div class="dimension-card">
+                    <span class="num">0{{ forloop.counter }}</span>
+                    <div class="feature-icon">
+                        {% if key == 'infrastructure' %}<i class="fa-solid fa-server"></i>
+                        {% elif key == 'curriculum' %}<i class="fa-solid fa-graduation-cap"></i>
+                        {% elif key == 'research' %}<i class="fa-solid fa-flask"></i>
+                        {% elif key == 'faculty' %}<i class="fa-solid fa-chalkboard-user"></i>
+                        {% elif key == 'governance' %}<i class="fa-solid fa-scale-balanced"></i>
+                        {% else %}<i class="fa-solid fa-network-wired"></i>{% endif %}
+                    </div>
+                    <h3>{{ label }}</h3>
+                    <p>{{ description }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <div class="row g-5">
+            <div class="col-lg-5">
+                <p class="eyebrow">Scoring methodology</p>
+                <h2 class="section-title">Transparent from response to result.</h2>
+                <p class="section-lead mb-4">Institutions respond to 24 indicators using a five-point maturity scale. Dimension results are the sum of responses divided by the maximum possible score, normalised to 0–100. The overall score applies the same calculation across all questions, so no dimension is silently weighted.</p>
+                <div class="card-panel">
+                    <div class="card-panel-header"><h3>Readiness categories</h3></div>
+                    <div class="table-responsive">
+                        <table class="table table-clean mb-0">
+                            <thead><tr><th>Band</th><th>Score</th><th>Interpretation</th></tr></thead>
+                            <tbody>
+                                <tr><td><span class="badge-soft badge-initial">Initial</span></td><td>0–39</td><td>Foundational activity is limited or informal.</td></tr>
+                                <tr><td><span class="badge-soft badge-developing">Developing</span></td><td>40–59</td><td>Defined activity in some units, partially resourced.</td></tr>
+                                <tr><td><span class="badge-soft badge-advanced">Advanced</span></td><td>60–79</td><td>Established institution-wide practice with review.</td></tr>
+                                <tr><td><span class="badge-soft badge-leading">Leading</span></td><td>80–100</td><td>Systematic, measured and continuously improved.</td></tr>
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="col-lg-7">
+                <div class="row g-3">
+                    <div class="col-sm-6"><div class="feature-card h-100"><div class="feature-icon"><i class="fa-solid fa-clipboard-list"></i></div><h3>Structured assessment</h3><p>Required responses, server-side validation and a clear instruction set make submissions consistent and auditable.</p></div></div>
+                    <div class="col-sm-6"><div class="feature-card h-100"><div class="feature-icon"><i class="fa-solid fa-calculator"></i></div><h3>Automatic scoring</h3><p>Dimension scores, the overall score and the readiness category are calculated on submission and stored with the record.</p></div></div>
+                    <div class="col-sm-6"><div class="feature-card h-100"><div class="feature-icon"><i class="fa-solid fa-clock-rotate-left"></i></div><h3>Preserved history</h3><p>Every assessment is retained. Reassess at any time and track movement across dimensions and categories.</p></div></div>
+                    <div class="col-sm-6"><div class="feature-card h-100"><div class="feature-icon"><i class="fa-solid fa-chart-line"></i></div><h3>Live analytics</h3><p>Consortium dashboards and comparisons are generated from stored records, never hardcoded sample statistics.</p></div></div>
+                    <div class="col-sm-6"><div class="feature-card h-100"><div class="feature-icon"><i class="fa-solid fa-shield-halved"></i></div><h3>Governed access</h3><p>Role-based permissions restrict institutional records to authorised representatives and consortium administrators.</p></div></div>
+                    <div class="col-sm-6"><div class="feature-card h-100"><div class="feature-icon"><i class="fa-solid fa-book-open-reader"></i></div><h3>Resource library</h3><p>Practical guidance on AI learning, governance, responsible use, research infrastructure and integration.</p></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section section-tint section-anchor" id="universities">
+    <div class="container">
+        <div class="section-head-row">
+            <div>
+                <p class="eyebrow">Participating universities</p>
+                <h2 class="section-title">Institutions in the consortium</h2>
+                <p class="section-lead">Approved member institutions and, where available, their most recent indicative readiness result.</p>
+            </div>
+            <a class="btn btn-outline-navy d-none d-md-inline-flex" href="{% url 'universities:list' %}">All universities <i class="fa-solid fa-arrow-right ms-1"></i></a>
+        </div>
+        {% if universities %}
+        <div class="row g-3">
+            {% for item in universities %}
+            <div class="col-md-6 col-lg-3">
+                <a class="university-card text-decoration-none" href="{{ item.university.get_absolute_url }}">
+                    <div class="uni-top">
+                        <div class="uni-monogram">{{ item.university.name|slice:":2"|upper }}</div>
+                        <div class="minw-0">
+                            <h3 class="uni-name">{{ item.university.name|truncatechars:48 }}</h3>
+                            <p class="uni-location"><i class="fa-solid fa-location-dot me-1"></i>{{ item.university.city }}, {{ item.university.country }}</p>
+                        </div>
+                    </div>
+                    <p class="uni-desc">{{ item.university.description|truncatechars:100 }}</p>
+                    <div class="uni-foot">
+                        {% if item.university.is_demo %}<span class="badge-soft badge-demo">Demo record</span>
+                        {% elif item.assessment %}<span class="badge-soft badge-{{ item.assessment.category|lower }}">{{ item.assessment.category }}</span>
+                        {% else %}<span class="badge-soft badge-neutral">Assessment pending</span>{% endif %}
+                        {% if item.assessment %}<div class="text-end"><div class="uni-score">{{ item.assessment.overall_score|floatformat:0 }}<small>%</small></div></div>{% endif %}
+                    </div>
+                </a>
+            </div>
+            {% endfor %}
+        </div>
+        {% if demo_count %}
+        <p class="text-xxs text-muted-soft mt-3 mb-0"><i class="fa-solid fa-circle-info me-1"></i>This environment includes {{ demo_count }} clearly-labelled demonstration records for evaluation. They are not real consortium members.</p>
+        {% endif %}
+        {% else %}
+        <div class="card-panel">
+            <div class="empty-state">
+                <div class="empty-icon"><i class="fa-solid fa-building-columns"></i></div>
+                <h3>No approved universities yet</h3>
+                <p>Institutional registrations are reviewed by the consortium secretariat. Be the first university to join the readiness programme.</p>
+                <a class="btn btn-navy" href="{% url 'accounts:register' %}">Register your university</a>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        <div class="section-head-row">
+            <div>
+                <p class="eyebrow">AI resource hub</p>
+                <h2 class="section-title">Guidance for every stage of adoption</h2>
+                <p class="section-lead">Practical, non-commercial resources curated by the consortium for university leaders and practitioners.</p>
+            </div>
+            <a class="btn btn-outline-navy d-none d-md-inline-flex" href="{% url 'resources:list' %}">Browse all resources <i class="fa-solid fa-arrow-right ms-1"></i></a>
+        </div>
+        <div class="row g-3">
+            {% for resource in resources %}
+            <div class="col-md-4">
+                <a href="{{ resource.get_absolute_url }}" class="resource-card text-decoration-none">
+                    <div class="resource-card-body">
+                        <span class="resource-cat"><i class="fa-solid fa-bookmark"></i>{{ resource.get_category_display }}</span>
+                        <h3>{{ resource.title }}</h3>
+                        <p>{{ resource.summary|truncatechars:120 }}</p>
+                        <div class="resource-meta"><span>{{ resource.updated_at|date:"d M Y" }}</span><span>Read resource <i class="fa-solid fa-arrow-right ms-1"></i></span></div>
+                    </div>
+                </a>
+            </div>
+            {% empty %}
+            <div class="col-12"><div class="card-panel"><div class="empty-state"><div class="empty-icon"><i class="fa-solid fa-book"></i></div><h3>Resources are being prepared</h3><p>The consortium secretariat is publishing the first resource collection.</p></div></div></div>
+            {% endfor %}
+        </div>
+    </div>
+</section>
+
+<section class="section section-tint section-anchor" id="contact">
+    <div class="container">
+        <div class="row g-5 align-items-center">
+            <div class="col-lg-6">
+                <p class="eyebrow">Contact the secretariat</p>
+                <h2 class="section-title">Join a growing international academic community.</h2>
+                <p class="section-lead mb-4">Whether you are preparing your first institutional assessment or looking for governance guidance, the consortium secretariat can help you get started.</p>
+                <div class="row g-3">
+                    <div class="col-sm-6">
+                        <div class="card-panel p-3 h-100">
+                            <div class="feature-icon mb-2"><i class="fa-regular fa-envelope"></i></div>
+                            <h3 class="fs-6 mb-1">Email</h3>
+                            <a class="small" href="mailto:{{ site_email }}">{{ site_email }}</a>
+                        </div>
+                    </div>
+                    <div class="col-sm-6">
+                        <div class="card-panel p-3 h-100">
+                            <div class="feature-icon mb-2"><i class="fa-solid fa-building-columns"></i></div>
+                            <h3 class="fs-6 mb-1">Institutional enquiries</h3>
+                            <p class="small text-muted-soft mb-0">Registration, approval and assessment support.</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="d-flex gap-2 mt-4 flex-wrap">
+                    <a class="btn btn-navy" href="{% url 'core:contact' %}"><i class="fa-regular fa-paper-plane me-2"></i>Send a message</a>
+                    <a class="btn btn-outline-navy" href="{% url 'accounts:register' %}">Register institution</a>
+                </div>
+            </div>
+            <div class="col-lg-6">
+                <div class="cta-panel">
+                    <p class="small-caps text-info mb-2" style="color:#8fd3e0!important;">Why participate</p>
+                    <h2 class="mb-3">Turn AI ambition into an evidence-based institutional plan.</h2>
+                    <p class="mb-4">A single assessment gives your leadership team a shared baseline across six dimensions — and a documented starting point for governance, investment and academic planning.</p>
+                    <ul class="checklist mb-4" style="--bs-body-color:#c3d3e3;">
+                        <li style="border-color:rgba(255,255,255,.12);color:#c3d3e3;"><i class="fa-solid fa-check" style="color:#1f9bb5;"></i><span>Instant dimension-wise and overall scoring</span></li>
+                        <li style="border-color:rgba(255,255,255,.12);color:#c3d3e3;"><i class="fa-solid fa-check" style="color:#1f9bb5;"></i><span>Preserved assessment history and trend analysis</span></li>
+                        <li style="border-color:rgba(255,255,255,.12);color:#c3d3e3;"><i class="fa-solid fa-check" style="color:#1f9bb5;"></i><span>Peer comparison across approved institutions</span></li>
+                        <li style="border:0;color:#c3d3e3;"><i class="fa-solid fa-check" style="color:#1f9bb5;"></i><span>Prioritised recommendations and practical resources</span></li>
+                    </ul>
+                    <a class="btn btn-cyan" href="{% url 'accounts:register' %}">Create a representative account</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

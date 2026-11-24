@@ -1,0 +1,240 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Compare universities{% endblock %}
+{% block page_eyebrow %}Insights{% endblock %}
+{% block page_title %}Compare universities{% endblock %}
+{% block content %}
+<div class="page-head">
+    <div>
+        <h2>Institutional comparison</h2>
+        <p>Compare overall readiness and all six dimensions for up to five approved universities.</p>
+    </div>
+    <div class="page-actions">
+        <a class="btn btn-sm btn-outline-navy" href="{% url 'analytics:dashboard' %}"><i class="fa-solid fa-chart-column me-1"></i>Analytics</a>
+    </div>
+</div>
+
+{% if too_many %}<div class="alert alert-warning"><i class="fa-solid fa-triangle-exclamation me-2"></i>Only the first five selected universities are compared. Remove a selection to include a different institution.</div>{% endif %}
+
+<div class="card-panel mb-3">
+    <div class="card-panel-header"><h3>Select institutions</h3><span class="text-xxs text-muted-soft">Only approved institutions with assessment data are comparable</span></div>
+    <div class="card-panel-body">
+        <form method="get" action="{% url 'analytics:comparison' %}" id="compareForm">
+            <div class="row g-2 mb-3">
+                <div class="col-md-8">
+                    <label class="form-label" for="uniSearch">Filter universities</label>
+                    <input type="search" class="form-control" id="uniSearch" placeholder="Type a university name or country…" autocomplete="off">
+                </div>
+                <div class="col-md-4">
+                    <label class="form-label" for="countryFilter">Country</label>
+                    <select class="form-select" id="countryFilter">
+                        <option value="">All countries</option>
+                        {% for item in countries %}<option value="{{ item }}">{{ item }}</option>{% endfor %}
+                    </select>
+                </div>
+            </div>
+            <div class="row g-2" id="compareList">
+                {% for university in universities %}
+                <div class="col-md-6 col-lg-4 compare-item" data-name="{{ university.name|lower }}" data-country="{{ university.country }}">
+                    <label class="compare-select">
+                        <input class="form-check-input compare-checkbox" type="checkbox" name="u" value="{{ university.pk }}" {% if university.pk in selected_ids %}checked{% endif %}>
+                        <span>
+                            <strong>{{ university.name|truncatechars:44 }}</strong>
+                            <span>{{ university.country }} · {% if university.latest_result_score is not None %}{{ university.latest_result_score|floatformat:1 }}% readiness{% else %}No assessment{% endif %}{% if university.is_demo %} · Demo record{% endif %}</span>
+                        </span>
+                    </label>
+                </div>
+                {% empty %}
+                <div class="col-12"><p class="small text-muted-soft mb-0">No approved universities are available for comparison yet.</p></div>
+                {% endfor %}
+            </div>
+            <div class="d-flex align-items-center justify-content-between flex-wrap gap-2 mt-3">
+                <span class="text-xxs text-muted-soft"><span id="selectedCount">{{ selected|length }}</span> of 5 selected · institutions without assessment data are excluded from charts</span>
+                <div class="d-flex gap-2">
+                    <a class="btn btn-sm btn-outline-navy" href="{% url 'analytics:comparison' %}">Clear</a>
+                    <button class="btn btn-sm btn-navy" type="submit"><i class="fa-solid fa-scale-balanced me-1"></i>Compare selected</button>
+                </div>
+            </div>
+        </form>
+    </div>
+</div>
+
+{% if rows %}
+<div class="row g-3 mb-3">
+    <div class="col-lg-5">
+        <div class="chart-card">
+            <h3>Overall readiness</h3>
+            <p>Latest stored overall score per institution.</p>
+            <div class="chart-wrap"><canvas id="overallChart" aria-label="Overall readiness comparison" role="img"></canvas></div>
+        </div>
+    </div>
+    <div class="col-lg-7">
+        <div class="chart-card">
+            <h3>Dimension profile</h3>
+            <p>Compare all six dimensions across selected institutions.</p>
+            <div class="chart-wrap"><canvas id="compareRadar" aria-label="Dimension comparison radar" role="img"></canvas></div>
+        </div>
+    </div>
+</div>
+
+<div class="card-panel mb-3">
+    <div class="card-panel-header"><h3>Comparison table</h3><span class="badge-soft badge-neutral">{{ rows|length }} institution{{ rows|length|pluralize }}</span></div>
+    <div class="table-wrap">
+        <table class="table table-clean compare-table">
+            <thead>
+                <tr>
+                    <th>Dimension</th>
+                    {% for row in rows %}<th class="text-center">{{ row.university.name|truncatechars:24 }}<br><span class="text-xxs text-muted-soft fw-normal">{{ row.university.country }}</span></th>{% endfor %}
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td class="dim-label">Overall readiness</td>
+                    {% for row in rows %}<td class="text-center"><span class="fw-semibold text-navy">{{ row.overall|floatformat:1 }}%</span><br><span class="badge-soft badge-{{ row.category|lower }}">{{ row.category }}</span></td>{% endfor %}
+                </tr>
+                {% for dimension in rows.0.dimensions %}
+                <tr>
+                    <td class="dim-label">{{ dimension.label }}</td>
+                    {% for row in rows %}<td class="text-center">{% for item in row.dimensions %}{% if item.key == dimension.key %}{{ item.score|floatformat:1 }}%{% endif %}{% endfor %}</td>{% endfor %}
+                </tr>
+                {% endfor %}
+                <tr>
+                    <td class="dim-label">Assessment date</td>
+                    {% for row in rows %}<td class="text-center text-xxs">{{ row.assessment.created_at|date:"d M Y" }}</td>{% endfor %}
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="card-panel">
+    <div class="card-panel-header"><h3>Selected institution details</h3></div>
+    <div class="table-wrap">
+        <table class="table table-clean">
+            <thead><tr><th>University</th><th>Country</th><th>Latest score</th><th>Category</th><th>Assessments</th><th class="text-end"></th></tr></thead>
+            <tbody>
+                {% for row in rows %}
+                <tr>
+                    <td class="fw-cell">{{ row.university.name }}{% if row.university.is_demo %} <span class="badge-soft badge-demo">Demo</span>{% endif %}</td>
+                    <td>{{ row.university.country }}</td>
+                    <td>{{ row.overall|floatformat:1 }}%</td>
+                    <td><span class="badge-soft badge-{{ row.category|lower }}">{{ row.category }}</span></td>
+                    <td>{{ row.university.assessment_count }}</td>
+                    <td class="text-end"><a class="btn btn-table" href="{{ row.university.get_absolute_url }}">Profile</a></td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% elif selected %}
+<div class="alert alert-info"><i class="fa-solid fa-circle-info me-2"></i><strong>No assessed institutions selected.</strong> The selected institution(s) do not have assessment data, or only one institution is selected. Select at least two assessed universities to compare.</div>
+{% else %}
+<div class="card-panel"><div class="empty-state"><div class="empty-icon"><i class="fa-solid fa-scale-balanced"></i></div><h3>Select universities to compare</h3><p>Choose up to five institutions above to generate comparison charts and a dimension table from stored assessment records.</p></div></div>
+{% endif %}
+{% endblock %}
+
+{% block extra_js %}
+{% if rows %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+{{ chart|json_script:"compareChartData" }}
+<script>
+(function () {
+    if (!window.Chart) return;
+    const chart = JSON.parse(document.getElementById("compareChartData").textContent);
+    const base = window.GUCAIR.baseOptions();
+    const palette = window.GUCAIR.palette;
+
+    const overallOptions = JSON.parse(JSON.stringify(base));
+    overallOptions.indexAxis = "y";
+    overallOptions.plugins.legend.display = false;
+    overallOptions.scales.x.max = 100;
+    overallOptions.scales.x.ticks.callback = (v) => v + "%";
+    overallOptions.scales.y.grid.display = false;
+    overallOptions.scales.y.ticks.autoSkip = false;
+    overallOptions.scales.y.ticks.callback = function (value) {
+        const label = this.getLabelForValue(value);
+        return label.length > 28 ? label.slice(0, 27) + "…" : label;
+    };
+    overallOptions.plugins.tooltip.callbacks = { label: (ctx) => ctx.parsed.x.toFixed(1) + "% overall" };
+    new Chart(document.getElementById("overallChart"), {
+        type: "bar",
+        data: {
+            labels: chart.labels,
+            datasets: [{
+                data: chart.overall,
+                backgroundColor: chart.labels.map((_, i) => palette[i % palette.length]),
+                borderRadius: 5,
+                barThickness: 18
+            }]
+        },
+        options: overallOptions
+    });
+
+    const radarOptions = JSON.parse(JSON.stringify(base));
+    radarOptions.scales = {
+        r: {
+            beginAtZero: true, max: 100,
+            ticks: { stepSize: 20, backdropColor: "transparent", font: { size: 9, family: "Inter, sans-serif" }, color: "#8a99aa" },
+            grid: { color: "#e9eff6" },
+            angleLines: { color: "#e9eff6" },
+            pointLabels: { font: { family: "Inter, sans-serif", size: 10 }, color: "#3f4c5c" }
+        }
+    };
+    new Chart(document.getElementById("compareRadar"), {
+        type: "radar",
+        data: {
+            labels: chart.dimension_labels,
+            datasets: chart.dimension_datasets.map((dataset, i) => ({
+                label: dataset.label,
+                data: dataset.data,
+                borderColor: palette[i % palette.length],
+                backgroundColor: "transparent",
+                borderWidth: 2,
+                pointRadius: 2.5,
+                pointBackgroundColor: palette[i % palette.length]
+            }))
+        },
+        options: radarOptions
+    });
+})();
+
+// Client-side filtering and selection limit
+(function () {
+    const search = document.getElementById("uniSearch");
+    const country = document.getElementById("countryFilter");
+    const items = document.querySelectorAll(".compare-item");
+    const boxes = document.querySelectorAll(".compare-checkbox");
+    const count = document.getElementById("selectedCount");
+    const form = document.getElementById("compareForm");
+
+    function filterItems() {
+        const term = (search.value || "").toLowerCase();
+        const selectedCountry = country.value;
+        items.forEach((item) => {
+            const matchesText = !term || item.dataset.name.includes(term) || item.dataset.country.toLowerCase().includes(term);
+            const matchesCountry = !selectedCountry || item.dataset.country === selectedCountry;
+            item.style.display = matchesText && matchesCountry ? "" : "none";
+        });
+    }
+    if (search) search.addEventListener("input", filterItems);
+    if (country) country.addEventListener("change", filterItems);
+
+    function updateCount() {
+        const checked = document.querySelectorAll(".compare-checkbox:checked").length;
+        if (count) count.textContent = checked;
+    }
+    boxes.forEach((box) => box.addEventListener("change", updateCount));
+
+    if (form) {
+        form.addEventListener("submit", (event) => {
+            const checked = document.querySelectorAll(".compare-checkbox:checked").length;
+            if (checked > 5) {
+                event.preventDefault();
+                window.alert("Please select at most five universities.");
+            }
+        });
+    }
+})();
+</script>
+{% endif %}
+{% endblock %}

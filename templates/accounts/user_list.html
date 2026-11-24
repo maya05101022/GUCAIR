@@ -1,0 +1,99 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Users and roles{% endblock %}
+{% block page_eyebrow %}Administration{% endblock %}
+{% block page_title %}Users and roles{% endblock %}
+{% block content %}
+<div class="page-head">
+    <div>
+        <h2>Platform accounts</h2>
+        <p>{{ total_users }} account{{ total_users|pluralize }} · manage roles and activation status</p>
+    </div>
+    <div class="page-actions">
+        <a class="btn btn-sm btn-outline-navy" href="{% url 'admin:index' %}"><i class="fa-solid fa-screwdriver-wrench me-1"></i>Django admin</a>
+        <a class="btn btn-sm btn-outline-navy" href="{% url 'dashboard:admin_home' %}"><i class="fa-solid fa-arrow-left me-1"></i>Admin overview</a>
+    </div>
+</div>
+
+<form method="get" class="filter-bar">
+    <div class="row g-2 align-items-end">
+        <div class="col-md-5">
+            <label class="form-label" for="q">Search</label>
+            <input type="search" class="form-control" id="q" name="q" value="{{ q }}" placeholder="Username, name or email">
+        </div>
+        <div class="col-md-2">
+            <label class="form-label" for="role">Role</label>
+            <select class="form-select" id="role" name="role">
+                <option value="">All roles</option>
+                <option value="admin" {% if role == 'admin' %}selected{% endif %}>Administrators</option>
+                <option value="representative" {% if role == 'representative' %}selected{% endif %}>Representatives</option>
+            </select>
+        </div>
+        <div class="col-md-2">
+            <label class="form-label" for="status">Status</label>
+            <select class="form-select" id="status" name="status">
+                <option value="">All</option>
+                <option value="active" {% if status == 'active' %}selected{% endif %}>Active</option>
+                <option value="inactive" {% if status == 'inactive' %}selected{% endif %}>Inactive</option>
+            </select>
+        </div>
+        <div class="col-md-3 d-flex gap-2">
+            <button class="btn btn-navy flex-fill" type="submit">Filter</button>
+            <a class="btn btn-outline-navy" href="{% url 'accounts:user_list' %}"><i class="fa-solid fa-rotate-left"></i></a>
+        </div>
+    </div>
+</form>
+
+<div class="card-panel">
+    <div class="table-wrap">
+        <table class="table table-clean">
+            <thead>
+                <tr><th>User</th><th>Email</th><th>Institution</th><th>Role</th><th>Status</th><th>Joined</th><th class="text-end">Actions</th></tr>
+            </thead>
+            <tbody>
+                {% for item in users %}
+                <tr>
+                    <td>
+                        <div class="d-flex align-items-center gap-2">
+                            <span class="avatar-sm">{{ item.username|slice:":1"|upper }}</span>
+                            <div>
+                                <div class="fw-cell">{{ item.get_full_name|default:item.username }}</div>
+                                <div class="text-xxs text-muted-soft">@{{ item.username }}{% if item.is_superuser %} · superuser{% endif %}</div>
+                            </div>
+                        </div>
+                    </td>
+                    <td>{{ item.email|default:"—" }}</td>
+                    <td>{% if item.profile.university %}<a href="{{ item.profile.university.get_absolute_url }}">{{ item.profile.university.name|truncatechars:30 }}</a>{% else %}<span class="text-muted-soft">—</span>{% endif %}</td>
+                    <td>
+                        <form method="post" action="{% url 'accounts:user_set_role' item.pk %}" class="d-flex gap-1 align-items-center">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                            <select name="role" class="form-select form-select-sm" style="min-width:130px;font-size:.75rem;">
+                                <option value="representative" {% if item.profile.role == 'representative' %}selected{% endif %}>Representative</option>
+                                <option value="admin" {% if item.profile.role == 'admin' %}selected{% endif %}>Administrator</option>
+                            </select>
+                            <button class="btn btn-table" type="submit" title="Update role">Set</button>
+                        </form>
+                    </td>
+                    <td><span class="badge-soft {% if item.is_active %}badge-approved{% else %}badge-rejected{% endif %}">{% if item.is_active %}Active{% else %}Inactive{% endif %}</span></td>
+                    <td>{{ item.date_joined|date:"d M Y" }}</td>
+                    <td class="text-end">
+                        <form method="post" action="{% url 'accounts:user_toggle_active' item.pk %}" data-confirm="{% if item.is_active %}Deactivate{% else %}Reactivate{% endif %} {{ item.username }}?">
+                            {% csrf_token %}
+                            <input type="hidden" name="next" value="{{ request.get_full_path }}">
+                            {% if item == user %}
+                            <span class="text-xxs text-muted-soft">Current account</span>
+                            {% else %}
+                            <button class="btn btn-table {% if item.is_active %}btn-table-danger{% endif %}" type="submit">{% if item.is_active %}Deactivate{% else %}Reactivate{% endif %}</button>
+                            {% endif %}
+                        </form>
+                    </td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="7"><div class="empty-state"><div class="empty-icon"><i class="fa-solid fa-users"></i></div><h3>No accounts match</h3><p>Adjust the filters to see registered users.</p></div></td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% include "partials/pagination.html" %}
+{% endblock %}

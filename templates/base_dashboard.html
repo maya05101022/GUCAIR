@@ -1,0 +1,127 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{% block title %}Dashboard{% endblock %} — GUCAIR</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Source+Serif+4:opsz,wght@8..60,500;8..60,600;8..60,700&display=swap" rel="stylesheet">
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.2/css/all.min.css" rel="stylesheet">
+    <link href="{% static 'css/styles.css' %}" rel="stylesheet">
+    <link rel="icon" href="{% static 'images/favicon.svg' %}" type="image/svg+xml">
+    {% block extra_head %}{% endblock %}
+</head>
+<body class="dashboard-body">
+<a class="skip-link" href="#main-content">Skip to content</a>
+<div class="dashboard-shell">
+    <aside class="dashboard-sidebar" id="dashboardSidebar">
+        <div class="sidebar-brand">
+            <a href="{% url 'core:landing' %}">
+                <span class="brand-mark brand-mark-light"><i class="fa-solid fa-graduation-cap"></i></span>
+                <span><strong>GUCAIR</strong><small>Consortium platform</small></span>
+            </a>
+            <button class="sidebar-close d-lg-none" type="button" data-sidebar-close aria-label="Close menu"><i class="fa-solid fa-xmark"></i></button>
+        </div>
+
+        <div class="sidebar-scroll">
+            <p class="sidebar-label">Workspace</p>
+            <ul class="sidebar-nav">
+                {% if user_profile.is_administrator %}
+                    <li><a href="{% url 'dashboard:admin_home' %}" class="{% if request.resolver_match.url_name == 'admin_home' %}active{% endif %}"><i class="fa-solid fa-chart-pie"></i>Platform overview</a></li>
+                    <li><a href="{% url 'universities:manage' %}" class="{% if request.resolver_match.url_name == 'manage' and request.resolver_match.app_name == 'universities' %}active{% endif %}"><i class="fa-solid fa-building-columns"></i>Universities
+                        {% if admin_pending_count %}<span class="sidebar-badge">{{ admin_pending_count }}</span>{% endif %}</a></li>
+                    <li><a href="{% url 'assessments:manage' %}" class="{% if request.resolver_match.url_name == 'manage' and request.resolver_match.app_name == 'assessments' %}active{% endif %}"><i class="fa-solid fa-clipboard-check"></i>Assessments</a></li>
+                    <li><a href="{% url 'accounts:user_list' %}" class="{% if request.resolver_match.url_name == 'user_list' %}active{% endif %}"><i class="fa-solid fa-users"></i>Users & roles</a></li>
+                    <li><a href="{% url 'resources:manage' %}" class="{% if request.resolver_match.url_name == 'manage' and request.resolver_match.app_name == 'resources' %}active{% endif %}"><i class="fa-solid fa-book-open"></i>Resource library</a></li>
+                    <li><a href="{% url 'core:contact_messages' %}" class="{% if request.resolver_match.url_name == 'contact_messages' %}active{% endif %}"><i class="fa-regular fa-envelope"></i>Messages
+                        {% if admin_open_messages %}<span class="sidebar-badge">{{ admin_open_messages }}</span>{% endif %}</a></li>
+                {% else %}
+                    <li><a href="{% url 'dashboard:home' %}" class="{% if request.resolver_match.url_name == 'home' %}active{% endif %}"><i class="fa-solid fa-gauge-high"></i>Overview</a></li>
+                    <li><a href="{% url 'assessments:overview' %}" class="{% if request.resolver_match.url_name == 'overview' %}active{% endif %}"><i class="fa-solid fa-clipboard-check"></i>AI readiness</a></li>
+                    <li><a href="{% url 'assessments:take' %}" class="{% if request.resolver_match.url_name == 'take' %}active{% endif %}"><i class="fa-solid fa-circle-plus"></i>New assessment</a></li>
+                    <li><a href="{% url 'assessments:history' %}" class="{% if request.resolver_match.url_name == 'history' %}active{% endif %}"><i class="fa-solid fa-clock-rotate-left"></i>Assessment history</a></li>
+                    <li><a href="{% url 'universities:edit' %}" class="{% if request.resolver_match.url_name == 'edit' %}active{% endif %}"><i class="fa-solid fa-building-columns"></i>Institutional profile</a></li>
+                {% endif %}
+            </ul>
+
+            <p class="sidebar-label">Insights</p>
+            <ul class="sidebar-nav">
+                <li><a href="{% url 'analytics:dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' and request.resolver_match.app_name == 'analytics' %}active{% endif %}"><i class="fa-solid fa-chart-column"></i>Analytics</a></li>
+                <li><a href="{% url 'analytics:comparison' %}" class="{% if request.resolver_match.url_name == 'comparison' %}active{% endif %}"><i class="fa-solid fa-scale-balanced"></i>Compare universities</a></li>
+                <li><a href="{% url 'resources:list' %}"><i class="fa-solid fa-book-open-reader"></i>Resource hub</a></li>
+            </ul>
+
+            <p class="sidebar-label">Account</p>
+            <ul class="sidebar-nav">
+                <li><a href="{% url 'accounts:profile' %}" class="{% if request.resolver_match.url_name == 'profile' %}active{% endif %}"><i class="fa-regular fa-user"></i>My profile</a></li>
+                <li><a href="{% url 'accounts:password_change' %}"><i class="fa-solid fa-key"></i>Change password</a></li>
+                <li><a href="{% url 'core:landing' %}"><i class="fa-solid fa-arrow-up-right-from-square"></i>Public website</a></li>
+            </ul>
+        </div>
+
+        <div class="sidebar-user">
+            <span class="avatar-sm">{{ user.username|slice:":1"|upper }}</span>
+            <div class="sidebar-user-info">
+                <strong>{{ user.get_full_name|default:user.username|truncatechars:22 }}</strong>
+                <span>{% if user_profile.is_administrator %}Administrator{% else %}{{ user_university.name|default:"Representative"|truncatechars:28 }}{% endif %}</span>
+            </div>
+            <form method="post" action="{% url 'accounts:logout' %}">
+                {% csrf_token %}
+                <button type="submit" class="btn btn-icon-light" title="Sign out" aria-label="Sign out"><i class="fa-solid fa-arrow-right-from-bracket"></i></button>
+            </form>
+        </div>
+    </aside>
+
+    <div class="sidebar-backdrop" data-sidebar-close></div>
+
+    <div class="dashboard-main">
+        <header class="dashboard-topbar">
+            <div class="d-flex align-items-center gap-3">
+                <button class="btn btn-icon-navy d-lg-none" type="button" data-sidebar-open aria-label="Open menu"><i class="fa-solid fa-bars"></i></button>
+                <div>
+                    <p class="topbar-eyebrow">{% block page_eyebrow %}GUCAIR workspace{% endblock %}</p>
+                    <h1 class="topbar-title">{% block page_title %}Dashboard{% endblock %}</h1>
+                </div>
+            </div>
+            <div class="d-flex align-items-center gap-2">
+                <a class="btn btn-sm btn-outline-navy d-none d-md-inline-flex" href="{% url 'resources:list' %}"><i class="fa-regular fa-circle-question me-1"></i>Guidance</a>
+                <div class="dropdown">
+                    <button class="btn btn-user dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        <span class="avatar-sm">{{ user.username|slice:":1"|upper }}</span>
+                        <span class="d-none d-md-inline">{{ user.get_short_name|default:user.username }}</span>
+                    </button>
+                    <ul class="dropdown-menu dropdown-menu-end shadow-sm">
+                        <li><a class="dropdown-item" href="{% url 'accounts:profile' %}">My profile</a></li>
+                        <li><a class="dropdown-item" href="{% url 'core:landing' %}">Public website</a></li>
+                        <li><hr class="dropdown-divider"></li>
+                        <li>
+                            <form method="post" action="{% url 'accounts:logout' %}">
+                                {% csrf_token %}
+                                <button type="submit" class="dropdown-item">Sign out</button>
+                            </form>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </header>
+
+        {% include "partials/messages.html" %}
+
+        <div class="dashboard-content" id="main-content">
+            {% block content %}{% endblock %}
+        </div>
+
+        <footer class="dashboard-footer">
+            <span>GUCAIR consortium platform</span>
+            <span>Indicative self-assessment data · Not official accreditation</span>
+        </footer>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+<script src="{% static 'js/app.js' %}"></script>
+{% block extra_js %}{% endblock %}
+</body>
+</html>

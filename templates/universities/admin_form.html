@@ -1,0 +1,57 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Edit university — {{ university.name }}{% endblock %}
+{% block page_eyebrow %}Administration{% endblock %}
+{% block page_title %}Edit university record{% endblock %}
+{% block content %}
+<div class="page-head">
+    <div>
+        <h2>{{ university.name }}</h2>
+        <p>Administrative edit of institutional details, approval status and reviewer note.</p>
+    </div>
+    <div class="page-actions">
+        <a class="btn btn-sm btn-outline-navy" href="{% url 'universities:manage' %}"><i class="fa-solid fa-arrow-left me-1"></i>University management</a>
+        <a class="btn btn-sm btn-outline-navy" href="{{ university.get_absolute_url }}">View public profile</a>
+    </div>
+</div>
+<div class="row g-3">
+    <div class="col-lg-8">
+        <div class="card-panel">
+            <div class="card-panel-header"><h3>Institutional record</h3><span class="badge-soft badge-{{ university.status }}">{{ university.get_status_display }}</span></div>
+            <div class="card-panel-body">
+                <form method="post" novalidate>
+                    {% csrf_token %}
+                    {% if form.non_field_errors %}<div class="alert alert-danger">{{ form.non_field_errors }}</div>{% endif %}
+                    <div class="row g-3">
+                        <div class="col-12">{% include "partials/field.html" with field=form.name %}</div>
+                        <div class="col-md-6">{% include "partials/field.html" with field=form.country %}</div>
+                        <div class="col-md-6">{% include "partials/field.html" with field=form.city %}</div>
+                        <div class="col-12">{% include "partials/field.html" with field=form.website %}</div>
+                        <div class="col-12">{% include "partials/field.html" with field=form.description %}</div>
+                        <div class="col-md-6">{% include "partials/field.html" with field=form.status %}</div>
+                        <div class="col-md-6">{% include "partials/field.html" with field=form.review_note %}</div>
+                    </div>
+                    <div class="d-flex gap-2 mt-3">
+                        <button type="submit" class="btn btn-navy">Save record</button>
+                        <a class="btn btn-outline-navy" href="{% url 'universities:manage' %}">Cancel</a>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-4">
+        <div class="card-panel">
+            <div class="card-panel-header"><h3>Record context</h3></div>
+            <div class="card-panel-body">
+                <ul class="list-unstyled small mb-0">
+                    <li class="d-flex justify-content-between py-2 border-bottom"><span class="text-muted-soft">Registered</span><strong>{{ university.created_at|date:"d M Y" }}</strong></li>
+                    <li class="d-flex justify-content-between py-2 border-bottom"><span class="text-muted-soft">Created by</span><strong>{{ university.created_by.username|default:"—" }}</strong></li>
+                    <li class="d-flex justify-content-between py-2 border-bottom"><span class="text-muted-soft">Representatives</span><strong>{{ university.representatives.count }}</strong></li>
+                    <li class="d-flex justify-content-between py-2 border-bottom"><span class="text-muted-soft">Assessments</span><strong>{{ university.assessments.count }}</strong></li>
+                    <li class="d-flex justify-content-between py-2"><span class="text-muted-soft">Demo record</span><strong>{% if university.is_demo %}Yes{% else %}No{% endif %}</strong></li>
+                </ul>
+                <p class="text-xxs text-muted-soft mt-3 mb-0">Changing status here updates the approval flag; the dedicated approve and reject actions also record a review timestamp.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

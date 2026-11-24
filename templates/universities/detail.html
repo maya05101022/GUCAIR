@@ -1,0 +1,156 @@
+{% extends "base.html" %}
+{% load humanize %}
+{% block title %}{{ university.name }} — GUCAIR{% endblock %}
+{% block content %}
+<section class="section-sm bg-surface border-bottom">
+    <div class="container">
+        <nav aria-label="breadcrumb" class="mb-3">
+            <ol class="breadcrumb small mb-0">
+                <li class="breadcrumb-item"><a href="{% url 'core:landing' %}">Home</a></li>
+                <li class="breadcrumb-item"><a href="{% url 'universities:list' %}">Universities</a></li>
+                <li class="breadcrumb-item active" aria-current="page">{{ university.name|truncatechars:40 }}</li>
+            </ol>
+        </nav>
+        <div class="d-flex justify-content-between align-items-start gap-4 flex-wrap">
+            <div class="d-flex gap-3 align-items-start">
+                <span class="uni-monogram" style="width:64px;height:64px;font-size:1.35rem;">{{ university.name|slice:":2"|upper }}</span>
+                <div>
+                    <div class="d-flex gap-2 flex-wrap mb-1">
+                        <span class="badge-soft badge-{{ university.status }}">{{ university.get_status_display }}</span>
+                        {% if university.is_demo %}<span class="badge-soft badge-demo">Demonstration record</span>{% endif %}
+                        {% if university.status == 'approved' %}<span class="badge-soft badge-neutral"><i class="fa-solid fa-circle-check"></i>Consortium member</span>{% endif %}
+                    </div>
+                    <h1 class="display-serif mb-1" style="font-size:clamp(1.7rem,3vw,2.35rem);color:var(--navy-950);">{{ university.name }}</h1>
+                    <p class="text-muted-soft mb-0"><i class="fa-solid fa-location-dot me-1"></i>{{ university.city }}, {{ university.country }}{% if university.website %} · <a href="{{ university.website }}" target="_blank" rel="noopener noreferrer">Institutional website <i class="fa-solid fa-arrow-up-right-from-square text-xxs"></i></a>{% endif %}</p>
+                </div>
+            </div>
+            <div class="d-flex gap-2 flex-wrap">
+                {% if user.is_authenticated %}
+                <a class="btn btn-outline-navy btn-sm" href="{% url 'analytics:comparison' %}?u={{ university.pk }}"><i class="fa-solid fa-scale-balanced me-1"></i>Compare</a>
+                {% endif %}
+                {% if is_owner %}
+                <a class="btn btn-navy btn-sm" href="{% url 'universities:edit' %}"><i class="fa-solid fa-pen me-1"></i>Edit profile</a>
+                {% endif %}
+                {% if user_profile.is_administrator %}
+                <a class="btn btn-navy btn-sm" href="{% url 'universities:admin_edit' university.pk %}"><i class="fa-solid fa-pen me-1"></i>Admin edit</a>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</section>
+
+<section class="section">
+    <div class="container">
+        {% if university.status == 'pending' %}
+        <div class="alert alert-warning"><i class="fa-solid fa-clock me-2"></i><strong>Awaiting review.</strong> This university profile has been submitted and is pending administrator approval. Assessment access is not yet enabled.</div>
+        {% elif university.status == 'rejected' %}
+        <div class="alert alert-danger"><i class="fa-solid fa-circle-xmark me-2"></i><strong>Registration not approved.</strong> {% if university.review_note %}{{ university.review_note }}{% else %}Contact the consortium secretariat for details.{% endif %}</div>
+        {% endif %}
+        {% if university.is_demo %}
+        <div class="alert alert-info"><i class="fa-solid fa-circle-info me-2"></i>This is a clearly-labelled demonstration record seeded to illustrate platform analytics. It does not represent a real university or consortium membership.</div>
+        {% endif %}
+
+        <div class="row g-4">
+            <div class="col-lg-7">
+                <div class="card-panel mb-3">
+                    <div class="card-panel-header"><h2>Institutional profile</h2><span class="text-xxs text-muted-soft">Updated {{ university.updated_at|date:"d M Y" }}</span></div>
+                    <div class="card-panel-body">
+                        <p style="white-space:pre-line;" class="mb-3">{{ university.description }}</p>
+                        <div class="row g-2">
+                            <div class="col-sm-6"><div class="mini-stat"><span>Country</span><strong class="fs-6">{{ university.country }}</strong></div></div>
+                            <div class="col-sm-6"><div class="mini-stat"><span>City / location</span><strong class="fs-6">{{ university.city }}</strong></div></div>
+                        </div>
+                    </div>
+                </div>
+
+                {% if can_view_scores %}
+                <div class="card-panel">
+                    <div class="card-panel-header"><h2>Assessment history</h2><span class="badge-soft badge-neutral">{{ history|length }} shown</span></div>
+                    <div class="card-panel-body">
+                        {% if history %}
+                        <div class="table-responsive">
+                            <table class="table table-clean mb-0">
+                                <thead><tr><th>Date</th><th>Overall</th><th>Category</th><th>Raw score</th><th></th></tr></thead>
+                                <tbody>
+                                    {% for item in history %}
+                                    <tr>
+                                        <td>{{ item.created_at|date:"d M Y" }}</td>
+                                        <td class="fw-cell">{{ item.overall_score|floatformat:1 }}%</td>
+                                        <td><span class="badge-soft badge-{{ item.category|lower }}">{{ item.category }}</span></td>
+                                        <td>{{ item.total_raw_score }}/{{ item.max_raw_score }}</td>
+                                        <td class="text-end">{% if user_profile.is_administrator or is_owner %}<a class="btn btn-table" href="{% url 'assessments:detail' item.pk %}">View</a>{% endif %}</td>
+                                    </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                        {% else %}
+                        <p class="small text-muted-soft mb-0">No assessments have been completed by this institution.</p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+
+            <div class="col-lg-5">
+                {% if can_view_scores and latest %}
+                <div class="card-panel mb-3">
+                    <div class="card-panel-header"><h2>Latest readiness result</h2><span class="badge-soft badge-{{ latest.category|lower }}">{{ latest.category }}</span></div>
+                    <div class="card-panel-body">
+                        <div class="d-flex align-items-center gap-3 mb-3">
+                            <div class="score-ring score-ring-sm" style="--value: {{ latest.overall_score }}; --ring: {% if latest.category == 'Initial' %}#b23b3b{% elif latest.category == 'Developing' %}#b5852f{% elif latest.category == 'Advanced' %}#3d6f9e{% else %}#1f7a54{% endif %};">
+                                <div class="score-ring-inner"><strong>{{ latest.overall_score|floatformat:0 }}</strong><span>/ 100</span></div>
+                            </div>
+                            <div>
+                                <p class="small mb-1"><strong class="text-navy">Overall readiness</strong></p>
+                                <p class="text-xxs text-muted-soft mb-0">Submitted {{ latest.created_at|date:"d M Y" }} · {{ latest.total_raw_score }}/{{ latest.max_raw_score }} raw points</p>
+                            </div>
+                        </div>
+                        {% for result in results %}
+                        <div class="dimension-bar">
+                            <div class="dimension-bar-head"><span>{{ result.get_dimension_display }}</span><span>{{ result.score|floatformat:1 }}%</span></div>
+                            <div class="progress-thin"><span style="width: {{ result.score }}%"></span></div>
+                        </div>
+                        {% endfor %}
+                        <div class="mt-3 pt-3 border-top d-flex gap-2 flex-wrap">
+                            {% if is_owner %}<a class="btn btn-sm btn-navy" href="{% url 'assessments:detail' latest.pk %}">Full result</a>{% endif %}
+                            <a class="btn btn-sm btn-outline-navy" href="{% url 'analytics:comparison' %}?u={{ university.pk }}">Compare</a>
+                        </div>
+                    </div>
+                </div>
+                {% elif not user.is_authenticated %}
+                <div class="card-panel mb-3">
+                    <div class="card-panel-body text-center py-4">
+                        <div class="empty-icon mx-auto"><i class="fa-solid fa-lock"></i></div>
+                        <h3 class="fs-6">Readiness data is member-accessible</h3>
+                        <p class="small text-muted-soft">Sign in to view assessment results, consortium analytics and comparisons. Institutional records remain scoped to the institution.</p>
+                        <a class="btn btn-sm btn-navy" href="{% url 'accounts:login' %}?next={{ request.path }}">Sign in to view</a>
+                    </div>
+                </div>
+                {% elif not latest %}
+                <div class="card-panel mb-3">
+                    <div class="card-panel-body text-center py-4">
+                        <div class="empty-icon mx-auto"><i class="fa-solid fa-clipboard-question"></i></div>
+                        <h3 class="fs-6">No assessment yet</h3>
+                        <p class="small text-muted-soft">This institution has not completed an AI readiness assessment.{% if is_owner %} Complete yours to unlock results and comparisons.{% endif %}</p>
+                        {% if is_owner %}<a class="btn btn-sm btn-navy" href="{% url 'assessments:take' %}">Start assessment</a>{% endif %}
+                    </div>
+                </div>
+                {% endif %}
+
+                <div class="card-panel">
+                    <div class="card-panel-header"><h2>Record details</h2></div>
+                    <div class="card-panel-body">
+                        <ul class="list-unstyled small mb-0">
+                            <li class="d-flex justify-content-between py-2 border-bottom"><span class="text-muted-soft">Status</span><span class="badge-soft badge-{{ university.status }}">{{ university.get_status_display }}</span></li>
+                            <li class="d-flex justify-content-between py-2 border-bottom"><span class="text-muted-soft">Registered</span><strong>{{ university.created_at|date:"d M Y" }}</strong></li>
+                            <li class="d-flex justify-content-between py-2 border-bottom"><span class="text-muted-soft">Approved</span><strong>{{ university.approved_at|date:"d M Y"|default:"—" }}</strong></li>
+                            <li class="d-flex justify-content-between py-2"><span class="text-muted-soft">Representatives</span><strong>{{ university.representatives.count }}</strong></li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</section>
+{% endblock %}

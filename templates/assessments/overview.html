@@ -1,0 +1,139 @@
+{% extends "base_dashboard.html" %}
+{% block title %}AI readiness assessment{% endblock %}
+{% block page_eyebrow %}Institutional assessment{% endblock %}
+{% block page_title %}AI readiness{% endblock %}
+{% block content %}
+<div class="page-head">
+    <div>
+        <h2>{{ university.name }}</h2>
+        <p>Six-dimension institutional assessment · {{ assessment_count }} completed attempt{{ assessment_count|pluralize }}</p>
+    </div>
+    <div class="page-actions">
+        {% if can_assess %}
+        <a class="btn btn-sm btn-navy" href="{% url 'assessments:take' %}"><i class="fa-solid fa-circle-plus me-1"></i>{% if latest %}Start reassessment{% else %}Start assessment{% endif %}</a>
+        {% else %}
+        <span class="badge-soft badge-pending">Awaiting university approval</span>
+        {% endif %}
+        <a class="btn btn-sm btn-outline-navy" href="{% url 'assessments:history' %}"><i class="fa-solid fa-clock-rotate-left me-1"></i>History</a>
+    </div>
+</div>
+
+{% if not can_assess %}
+<div class="alert alert-warning"><i class="fa-solid fa-lock me-2"></i><strong>Assessment locked.</strong> Your university registration is {{ university.get_status_display|lower }}. Assessments unlock when an administrator approves the institution.</div>
+{% endif %}
+
+<div class="row g-3">
+    <div class="col-lg-8">
+        <div class="card-panel mb-3">
+            <div class="card-panel-header">
+                <h3>Assessment instrument</h3>
+                <span class="badge-soft badge-neutral">{{ question_count }} indicators</span>
+            </div>
+            <div class="card-panel-body">
+                <p>This instrument evaluates institutional AI readiness across six dimensions. Each of the {{ question_count }} indicators uses the same five-point maturity scale, from <strong>0 — Not Implemented</strong> to <strong>4 — Fully Implemented</strong>.</p>
+                <p class="mb-3">Responses should describe current, evidenced practice rather than future plans. Bring together academic, IT, research, quality and governance colleagues to complete the assessment. Dimension and overall scores are calculated automatically on submission; previous results are preserved.</p>
+                <div class="alert alert-warning mb-0"><i class="fa-solid fa-circle-info me-2"></i>This is an indicative platform-generated assessment. It is not official university accreditation or a regulatory judgement.</div>
+            </div>
+        </div>
+
+        {% if latest %}
+        <div class="card-panel mb-3">
+            <div class="card-panel-header">
+                <h3>Latest readiness result</h3>
+                <span class="badge-soft badge-{{ latest.category|lower }}">{{ latest.category }}</span>
+            </div>
+            <div class="card-panel-body">
+                <div class="d-flex align-items-center gap-4 flex-wrap mb-3">
+                    <div class="score-ring" style="--value: {{ latest.overall_score }}; --ring: {% if latest.category == 'Initial' %}#b23b3b{% elif latest.category == 'Developing' %}#b5852f{% elif latest.category == 'Advanced' %}#3d6f9e{% else %}#1f7a54{% endif %};">
+                        <div class="score-ring-inner"><strong>{{ latest.overall_score|floatformat:0 }}<span class="fs-6">%</span></strong><span>Overall</span></div>
+                    </div>
+                    <div class="flex-grow-1">
+                        <p class="mb-1"><strong class="text-navy">{{ latest.university.name }} scored {{ latest.overall_score|floatformat:1 }} out of 100.</strong></p>
+                        <p class="small text-muted-soft mb-2">Submitted {{ latest.created_at|date:"d M Y, H:i" }} · {{ latest.total_raw_score }} of {{ latest.max_raw_score }} raw maturity points.</p>
+                        <a class="btn btn-sm btn-outline-navy" href="{% url 'assessments:detail' latest.pk %}">Open full result <i class="fa-solid fa-arrow-right ms-1"></i></a>
+                    </div>
+                </div>
+                <div class="row g-2">
+                    {% for result in results %}
+                    <div class="col-sm-6">
+                        <div class="dim-result">
+                            <div class="dim-result-head"><p class="dim-result-name">{{ result.get_dimension_display }}</p><span class="dim-result-score">{{ result.score|floatformat:0 }}<small>%</small></span></div>
+                            <div class="progress-thin"><span style="width: {{ result.score }}%"></span></div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        {% if recommendations %}
+        <div class="card-panel">
+            <div class="card-panel-header"><h3>Suggested priorities</h3><span class="text-xxs text-muted-soft">Lowest-scoring dimensions</span></div>
+            <div class="card-panel-body">
+                {% for rec in recommendations %}
+                <div class="recommendation">
+                    <span class="rec-rank">{{ forloop.counter }}</span>
+                    <div>
+                        <h4>{{ rec.label }} <span class="badge-soft badge-{{ rec.category|lower }} ms-1">{{ rec.score|floatformat:0 }}%</span></h4>
+                        <p>{{ rec.advice }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+        {% else %}
+        <div class="card-panel">
+            <div class="empty-state">
+                <div class="empty-icon"><i class="fa-solid fa-clipboard-check"></i></div>
+                <h3>No assessment completed yet</h3>
+                <p>Establish your institutional baseline across all six dimensions. The assessment takes approximately 15–20 minutes with your leadership team.</p>
+                {% if can_assess %}<a class="btn btn-navy" href="{% url 'assessments:take' %}">Start the assessment</a>{% endif %}
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <div class="col-lg-4">
+        <div class="card-panel mb-3">
+            <div class="card-panel-header"><h3>Dimensions</h3><span class="text-xxs text-muted-soft">4 each</span></div>
+            <div class="card-panel-body">
+                <ul class="list-unstyled mb-0">
+                    {% for key, label, description in dimensions %}
+                    <li class="d-flex gap-2 py-2 {% if not forloop.last %}border-bottom{% endif %}">
+                        <span class="text-xxs fw-bold text-muted-soft" style="min-width:16px;">0{{ forloop.counter }}</span>
+                        <div><p class="small mb-0 fw-semibold text-navy">{{ label }}</p><p class="text-xxs text-muted-soft mb-0">{{ description }}</p></div>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        <div class="card-panel mb-3">
+            <div class="card-panel-header"><h3>Maturity scale</h3></div>
+            <div class="card-panel-body">
+                {% for value, label, hint in scale %}
+                <div class="d-flex gap-2 py-2 {% if not forloop.last %}border-bottom{% endif %}">
+                    <span class="rec-rank" style="width:22px;height:22px;font-size:.7rem;">{{ value }}</span>
+                    <div><p class="small fw-semibold text-navy mb-0">{{ label }}</p><p class="text-xxs text-muted-soft mb-0">{{ hint }}</p></div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% if history %}
+        <div class="card-panel">
+            <div class="card-panel-header"><h3>Recent attempts</h3><a class="text-xxs" href="{% url 'assessments:history' %}">All history</a></div>
+            <div class="card-panel-body">
+                <ul class="timeline mb-0">
+                    {% for item in history %}
+                    <li class="{% if forloop.first %}is-latest{% endif %}">
+                        <p class="t-title"><a href="{% url 'assessments:detail' item.pk %}">{{ item.overall_score|floatformat:1 }}% · {{ item.category }}</a></p>
+                        <p class="t-meta">{{ item.created_at|date:"d M Y" }}</p>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

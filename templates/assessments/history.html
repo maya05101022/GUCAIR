@@ -1,0 +1,88 @@
+{% extends "base_dashboard.html" %}
+{% block title %}Assessment history{% endblock %}
+{% block page_eyebrow %}Institutional assessment{% endblock %}
+{% block page_title %}Assessment history{% endblock %}
+{% block content %}
+<div class="page-head">
+    <div>
+        <h2>{{ university.name }}</h2>
+        <p>{{ total }} completed assessment{{ total|pluralize }} · every attempt is preserved</p>
+    </div>
+    <div class="page-actions">
+        <a class="btn btn-sm btn-navy" href="{% url 'assessments:take' %}"><i class="fa-solid fa-circle-plus me-1"></i>New assessment</a>
+        <a class="btn btn-sm btn-outline-navy" href="{% url 'assessments:overview' %}"><i class="fa-solid fa-arrow-left me-1"></i>Overview</a>
+    </div>
+</div>
+
+{% if score_history|length > 1 %}
+<div class="card-panel mb-3">
+    <div class="card-panel-header"><h3>Readiness trend</h3><span class="text-xxs text-muted-soft">Last {{ score_history|length }} attempts</span></div>
+    <div class="card-panel-body"><div class="chart-wrap"><canvas id="historyChart" aria-label="Readiness score history" role="img"></canvas></div></div>
+</div>
+{% endif %}
+
+<div class="card-panel">
+    <div class="card-panel-header"><h3>Assessment records</h3><span class="badge-soft badge-neutral">{{ total }} total</span></div>
+    <div class="table-wrap">
+        <table class="table table-clean">
+            <thead><tr><th>Date submitted</th><th>Overall score</th><th>Category</th><th>Raw points</th><th>Submitted by</th><th class="text-end">Action</th></tr></thead>
+            <tbody>
+                {% for item in assessments %}
+                <tr>
+                    <td>
+                        <div class="fw-cell">{{ item.created_at|date:"d M Y" }}</div>
+                        <div class="text-xxs text-muted-soft">{{ item.created_at|date:"H:i" }} UTC</div>
+                    </td>
+                    <td><span class="fw-semibold text-navy">{{ item.overall_score|floatformat:1 }}%</span></td>
+                    <td><span class="badge-soft badge-{{ item.category|lower }}">{{ item.category }}</span></td>
+                    <td>{{ item.total_raw_score }} / {{ item.max_raw_score }}</td>
+                    <td>{% if item.submitted_by %}{{ item.submitted_by.get_full_name|default:item.submitted_by.username }}{% else %}—{% endif %}</td>
+                    <td class="text-end"><a class="btn btn-table" href="{% url 'assessments:detail' item.pk %}">View result</a></td>
+                </tr>
+                {% empty %}
+                <tr><td colspan="6"><div class="empty-state"><div class="empty-icon"><i class="fa-solid fa-clipboard-check"></i></div><h3>No assessments yet</h3><p>Complete your first institution-wide readiness assessment to establish a baseline.</p><a class="btn btn-navy" href="{% url 'assessments:take' %}">Start assessment</a></div></td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+</div>
+{% include "partials/pagination.html" %}
+{% endblock %}
+
+{% block extra_js %}
+{% if score_history|length > 1 %}
+<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.3/dist/chart.umd.min.js"></script>
+{{ score_history|json_script:"historyChartData" }}
+<script>
+(function () {
+    const data = JSON.parse(document.getElementById("historyChartData").textContent);
+    const canvas = document.getElementById("historyChart");
+    if (!canvas || !window.Chart) return;
+    const options = window.GUCAIR.baseOptions();
+    options.scales.y.max = 100;
+    options.scales.y.ticks.callback = (v) => v + "%";
+    options.plugins.legend.display = false;
+    options.plugins.tooltip.callbacks = { label: (ctx) => ctx.parsed.y.toFixed(1) + "% readiness" };
+    new Chart(canvas, {
+        type: "line",
+        data: {
+            labels: data.map((row) => row.label),
+            datasets: [{
+                data: data.map((row) => row.score),
+                borderColor: "#1f9bb5",
+                backgroundColor: "rgba(31,155,181,.09)",
+                fill: true,
+                tension: .3,
+                borderWidth: 2.5,
+                pointRadius: 4,
+                pointBackgroundColor: "#0e2c52",
+                pointBorderColor: "#fff",
+                pointBorderWidth: 2
+            }]
+        },
+        options: options
+    });
+})();
+</script>
+{% endif %}
+{% endblock %}

@@ -1,0 +1,165 @@
+{
+  "info": {
+    "_postman_id": "b7f2c1a4-6d3e-4c8a-9f10-gucair2026",
+    "name": "GUCAIR API and smoke checks",
+    "description": "Read-only checks for the GUCAIR Django application. Set the baseUrl variable to the local server or the verified Render URL.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://127.0.0.1:8000",
+      "type": "string"
+    }
+  ],
+  "item": [
+    {
+      "name": "Health",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/health/",
+          "host": ["{{baseUrl}}"],
+          "path": ["health", ""]
+        },
+        "description": "Confirms the database connection and returns record counts."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('Database connected', () => pm.expect(body.database).to.eql('connected'));",
+              "pm.test('Status is ok', () => pm.expect(body.status).to.eql('ok'));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Analytics summary",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/analytics/api/summary/",
+          "host": ["{{baseUrl}}"],
+          "path": ["analytics", "api", "summary", ""]
+        },
+        "description": "Read-only aggregate summary of approved universities and assessments."
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+              "const body = pm.response.json();",
+              "pm.test('Approved universities is numeric', () => pm.expect(body.approved_universities).to.be.a('number'));",
+              "pm.test('Average readiness is numeric', () => pm.expect(body.average_readiness).to.be.a('number'));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Landing page HTML",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/",
+          "host": ["{{baseUrl}}"],
+          "path": [""]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+              "pm.test('GUCAIR branding present', () => pm.expect(pm.response.text()).to.include('GUCAIR'));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "University directory",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/universities/",
+          "host": ["{{baseUrl}}"],
+          "path": ["universities", ""]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status is 200', () => pm.response.to.have.status(200));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Resource hub",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/resources/",
+          "host": ["{{baseUrl}}"],
+          "path": ["resources", ""]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status is 200', () => pm.response.to.have.status(200));"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    },
+    {
+      "name": "Login page",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/accounts/login/",
+          "host": ["{{baseUrl}}"],
+          "path": ["accounts", "login", ""]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "exec": [
+              "pm.test('Status is 200', () => pm.response.to.have.status(200));",
+              "pm.test('CSRF cookie set', () => pm.expect(pm.cookies.has('csrftoken')).to.be.true);"
+            ],
+            "type": "text/javascript"
+          }
+        }
+      ]
+    }
+  ]
+}
