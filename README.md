@@ -14,7 +14,7 @@ The assessment is **indicative and self-reported**. It is not an accreditation d
 | --- | --- |
 | Public web application | _To be added after the verified Render deployment_ |
 | Health check | `https://<render-service>.onrender.com/health/` |
-| Source repository | _To be added after the GitHub push_ |
+| Source repository | <https://github.com/maya05101022/GUCAIR> |
 
 > The final submitted source archive is created only after the live URL above has been
 > verified in a browser.
