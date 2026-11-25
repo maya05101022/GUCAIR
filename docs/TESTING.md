@@ -19,7 +19,7 @@ Latest verified result: **112 tests, 0 failures, 0 errors**.
 ```text
 Found 112 test(s).
 System check identified no issues (0 silenced).
-Ran 112 tests in 4.880s
+Ran 112 tests in 2.885s
 OK
 ```
 
@@ -71,8 +71,8 @@ Additional checks performed manually in Chrome:
 
 ## Limitations of the automated suite
 
-- No live PostgreSQL integration test is run locally; production uses Neon and is verified
-  after deployment through `/health/` and the deployed UI.
+- No live PostgreSQL integration test is run locally; production uses Render PostgreSQL and
+  is verified after deployment through `/health/` and the deployed UI.
 - Email is console-backed locally; the contact form persists messages instead of sending.
 - Browser visuals are verified manually rather than through a headless visual-regression
   service.

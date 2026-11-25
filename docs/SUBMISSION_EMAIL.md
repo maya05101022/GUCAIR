@@ -36,7 +36,7 @@ GUCAIR is a server-rendered Django platform for university AI readiness. It prov
 
 **Technology**
 HTML5, CSS3, Bootstrap 5, ES6 JavaScript, Font Awesome, Chart.js, Python, Django,
-Django Templates/Forms/Auth/ORM, SQLite locally, Neon PostgreSQL in production, Gunicorn,
+Django Templates/Forms/Auth/ORM, SQLite locally, PostgreSQL in production (Render), Gunicorn,
 WhiteNoise, Git/GitHub, Render, Postman and the Django Test Framework. No React, Node.js,
 MongoDB or Firebase is used.
 

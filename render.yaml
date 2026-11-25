@@ -1,8 +1,23 @@
+# Render Blueprint for GUCAIR.
+#
+# Deploy with: https://render.com/deploy?repo=https://github.com/maya05101022/GUCAIR
+# Render creates the free PostgreSQL instance and the free web service, links
+# them through DATABASE_URL, and prompts once for the administrator credentials.
+
+databases:
+  - name: gucair-db
+    databaseName: gucair
+    user: gucair
+    plan: free
+    region: oregon
+    postgresMajorVersion: "17"
+
 services:
   - type: web
     name: gucair
     runtime: python
     plan: free
+    region: oregon
     buildCommand: "./build.sh"
     startCommand: "gunicorn config.wsgi:application --bind 0.0.0.0:$PORT --workers 3 --timeout 120"
     healthCheckPath: /health/
@@ -15,7 +30,9 @@ services:
       - key: SECRET_KEY
         generateValue: true
       - key: DATABASE_URL
-        sync: false
+        fromDatabase:
+          name: gucair-db
+          property: connectionString
       - key: ALLOWED_HOSTS
         value: "localhost,127.0.0.1,.onrender.com"
       - key: CSRF_TRUSTED_ORIGINS

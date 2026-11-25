@@ -2,7 +2,8 @@
 Django settings for the GUCAIR project.
 
 Local development uses SQLite. Production uses a PostgreSQL database supplied
-through the DATABASE_URL environment variable (Neon PostgreSQL on Render).
+through the DATABASE_URL environment variable (Render PostgreSQL on Render;
+any PostgreSQL URL, including Neon, also works).
 """
 
 import os
@@ -186,5 +187,5 @@ X_FRAME_OPTIONS = "DENY"
 if env_bool("USE_X_FORWARDED_HOST", default=False):
     USE_X_FORWARDED_HOST = True
 
-# Neon PostgreSQL requires SSL in production. dj-database-url passes the
-# sslmode query parameter through from DATABASE_URL.
+# Managed PostgreSQL providers (Render, Neon) accept an sslmode query
+# parameter. dj-database-url passes it through from DATABASE_URL unchanged.

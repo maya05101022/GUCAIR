@@ -10,7 +10,7 @@ pip install -r requirements.txt
 echo "Collecting static files..."
 python manage.py collectstatic --noinput
 
-echo "Waiting for the Neon PostgreSQL database..."
+echo "Waiting for the PostgreSQL database..."
 python manage.py wait_for_db
 
 echo "Applying database migrations..."

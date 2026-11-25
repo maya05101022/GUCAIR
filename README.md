@@ -77,7 +77,7 @@ The assessment is **indicative and self-reported**. It is not an accreditation d
 | --- | --- |
 | Backend | Python, Django 5.2 |
 | Templates | Django Templates, Django Forms |
-| Database | SQLite locally, Neon PostgreSQL in production |
+| Database | SQLite locally, PostgreSQL in production (Render Postgres) |
 | Frontend | HTML5, CSS3, Bootstrap 5, ES6 JavaScript |
 | Icons and charts | Font Awesome 6, Chart.js 4 |
 | Auth and ORM | Django authentication, Django ORM |
@@ -152,7 +152,7 @@ Production administrators are created from `ADMIN_USERNAME`, `ADMIN_PASSWORD` an
 | --- | --- | --- |
 | `SECRET_KEY` | Production | Long random Django secret |
 | `DEBUG` | Production | Must be `False` |
-| `DATABASE_URL` | Production | Neon PostgreSQL URL with `sslmode=require` |
+| `DATABASE_URL` | Production | PostgreSQL URL (`postgresql://…`); Render Postgres supplies it |
 | `ALLOWED_HOSTS` | Production | Comma-separated allowed hosts |
 | `CSRF_TRUSTED_ORIGINS` | Production | Comma-separated trusted HTTPS origins |
 | `RENDER_EXTERNAL_HOSTNAME` | Auto on Render | Added to hosts and CSRF origins automatically |
@@ -163,6 +163,27 @@ Production administrators are created from `ADMIN_USERNAME`, `ADMIN_PASSWORD` an
 | `SECURE_SSL_REDIRECT` | Optional | Defaults to `True` when `DEBUG=False` |
 
 See [`.env.example`](.env.example) and [`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
+
+## Deployment on Render
+
+The repository is Blueprint-ready: [`render.yaml`](render.yaml) provisions a free Render
+PostgreSQL instance (`gucair-db`) and a free Python web service (`gucair`), links them
+through `DATABASE_URL`, and runs [`build.sh`](build.sh) on every deploy.
+
+[![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/maya05101022/GUCAIR)
+
+1. Open <https://render.com/deploy?repo=https://github.com/maya05101022/GUCAIR> and sign in.
+2. Confirm the Blueprint. Render creates the database and the web service in `oregon`.
+3. Enter values for the three prompted secrets:
+   `ADMIN_USERNAME`, `ADMIN_PASSWORD` (12+ characters) and `ADMIN_EMAIL`.
+4. Wait for the first build. It installs dependencies, collects static files, waits for
+   PostgreSQL, migrates, seeds the question bank and resources, and creates the administrator.
+5. Verify `<live URL>/health/` returns `{"status": "ok", "database": "connected", …}`.
+
+`config/settings.py` reads `RENDER_EXTERNAL_HOSTNAME` automatically, so `ALLOWED_HOSTS` and
+`CSRF_TRUSTED_ORIGINS` stay correct without manual edits. Full details, the manual
+service configuration, and a Neon PostgreSQL alternative are in
+[`docs/DEPLOYMENT.md`](docs/DEPLOYMENT.md).
 
 ## Automated tests
 
@@ -177,7 +198,7 @@ management, CSRF enforcement, health checks and error pages.
 Latest local run:
 
 ```text
-Ran 112 tests in 4.880s
+Ran 112 tests in 2.885s
 OK
 ```
 
@@ -231,7 +252,8 @@ features and must not be presented as real consortium members.
 ## Limitations
 
 - Readiness results are self-reported and indicative, not audited or accreditation-grade.
-- The free Render instance may cold-start after inactivity.
+- The free Render web instance may cold-start after inactivity, and Render's free PostgreSQL
+  plan is time-limited; the deployment guide documents the upgrade and Neon swap-in paths.
 - Email delivery is not configured; the contact form stores messages for administrator review.
 - Charts require the Chart.js CDN; core content remains usable without JavaScript.
 
