@@ -69,6 +69,27 @@ Additional checks performed manually in Chrome:
    - Confirm unauthenticated dashboard access redirects to sign-in.
    - Confirm a representative receives 403 on administrator pages.
 
+## Production verification (25 November 2026)
+
+The deployed instance at <https://gucair-aydh.onrender.com> was exercised end to end after
+the Render build completed:
+
+| Check | Result |
+| --- | --- |
+| `GET /health/` | HTTP 200, `{"status": "ok", "database": "connected", ...}` |
+| `GET /`, `/universities/`, `/resources/`, `/about/` | HTTP 200 |
+| `GET /static/css/styles.css`, `/static/js/app.js`, `/static/images/favicon.svg` | HTTP 200 |
+| `GET http://…/` | HTTP 301 to the HTTPS host |
+| Security headers | HSTS with preload, `X-Frame-Options: DENY`, `nosniff`, `Referrer-Policy` |
+| `GET /analytics/api/summary/` | HTTP 200 JSON from live records |
+| Administrator sign-in | Success; `/dashboard/manage/` and all admin pages render with live data |
+| Representative registration | Account and pending institution created; assessments blocked until approval |
+| Administrator approval | Pending institution approved; representative workspace unlocked |
+| 24-question submission | Scored 75.00% (Advanced), 72/96 raw points, six dimensions at 75.0% |
+| Consortium analytics | Recalculated to 7 institutions, 10 assessments, 64.3% average |
+| Contact form | Message persisted and resolved through the administrator inbox |
+| Browser console | No errors on the analytics, comparison, management and result pages |
+
 ## Limitations of the automated suite
 
 - No live PostgreSQL integration test is run locally; production uses Render PostgreSQL and

@@ -12,12 +12,28 @@ The assessment is **indicative and self-reported**. It is not an accreditation d
 
 | Item | Location |
 | --- | --- |
-| Public web application | _To be added after the verified Render deployment_ |
-| Health check | `https://<render-service>.onrender.com/health/` |
+| Public web application | <https://gucair-aydh.onrender.com> |
+| Health check | <https://gucair-aydh.onrender.com/health/> |
 | Source repository | <https://github.com/maya05101022/GUCAIR> |
 
-> The final submitted source archive is created only after the live URL above has been
-> verified in a browser.
+Verified live on 25 November 2026 on Render's free tier (Oregon) with Render PostgreSQL 17:
+the health check reports a connected database, the landing page and directory load, an
+administrator signs in, a representative registers, is approved, and submits a 24-question
+assessment that scores correctly, and plain HTTP redirects to HTTPS.
+
+### Live demonstration accounts
+
+These accounts exist only in the deployed database, so the application can be reviewed
+without registering. The institution `Demo — Insight Valley University` is a clearly
+labelled demonstration record.
+
+| Role | Username | Password |
+| --- | --- | --- |
+| Administrator | `gucair_admin` | `Gc7!rT2#vLq9&Wm4` |
+| University Representative | `demo_rep` | `Valley!Q7#mint` |
+
+> These credentials are published for coursework evaluation only. Change the administrator
+> password (Account → Change password) before using the deployment for anything else.
 
 ## Features
 
@@ -179,6 +195,10 @@ through `DATABASE_URL`, and runs [`build.sh`](build.sh) on every deploy.
 4. Wait for the first build. It installs dependencies, collects static files, waits for
    PostgreSQL, migrates, seeds the question bank and resources, and creates the administrator.
 5. Verify `<live URL>/health/` returns `{"status": "ok", "database": "connected", …}`.
+
+The current deployment was created from this Blueprint on 25 November 2026
+(Blueprint ID `exs-dc370tnlot8c7399larg`, service `srv-dc3737ou01pc73doo5b0`) and lives at
+<https://gucair-aydh.onrender.com>. Pushing to `main` triggers an automatic redeploy.
 
 `config/settings.py` reads `RENDER_EXTERNAL_HOSTNAME` automatically, so `ALLOWED_HOSTS` and
 `CSRF_TRUSTED_ORIGINS` stay correct without manual edits. Full details, the manual
