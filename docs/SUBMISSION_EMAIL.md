@@ -1,67 +1,92 @@
-# Submission email draft
+# Submission email
 
-**Status: draft only — do not send until the student provides their details and gives
-explicit permission.**
+**Status: ready to send — awaiting the student's explicit confirmation.**
+Nothing has been sent. The recipient, subject, body and attachment below are final.
 
-To: `polyghosh@ndub.edu.bd`
-Subject: GUCAIR Django project submission — [Student Full Name], [Student ID], Section [X]
+| Field | Value |
+| --- | --- |
+| To | `polyghosh@ndub.edu.bd` |
+| Subject | `web engineering assignment` |
+| Attachment | `C:\Users\User\GUCAIR_Source_Code.zip` (170,469 bytes) |
+| Student | Humayra Kausar Maya |
+| Student ID | `0692320005101022` |
+| Section | `CSE22` |
+| Course | Web Engineering |
+| Institution | Notre Dame University Bangladesh |
+| Live site | <https://gucair-aydh.onrender.com/> |
+| Repository | <https://github.com/maya05101022/GUCAIR> |
 
 ---
 
-Dear Sir/Madam,
+## Message body
 
-I hope you are well. I am submitting my full-stack web application project, **GUCAIR —
-Global University Consortium of AI Readiness**, developed with Django, Bootstrap 5 and
-PostgreSQL.
+Dear Ma'am,
 
-**Live application:** [VERIFIED RENDER URL]
-**Source code:** [GITHUB REPOSITORY URL]
-**Health check:** [VERIFIED URL]/health/
+I hope you are doing well. Please find attached the complete source code of my Web
+Engineering assignment as a ZIP file.
 
 **Student details**
-- Full name: [STUDENT FULL NAME]
-- Student ID: [STUDENT ID]
-- Section: [SECTION]
-- Course: [COURSE CODE AND TITLE]
+- Name: Humayra Kausar Maya
+- Student ID: 0692320005101022
+- Section: CSE22
+- Course: Web Engineering
 - Institution: Notre Dame University Bangladesh
 
-**Project summary**
-GUCAIR is a server-rendered Django platform for university AI readiness. It provides:
-- public consortium website and approved-university directory;
-- role-based accounts for Administrators and University Representatives;
-- institutional registration with an administrator approval workflow;
-- a 24-question assessment across six dimensions, scored 0–100 with four readiness bands;
-- dashboards, assessment history, recommendations, consortium analytics and comparison;
-- an AI resource hub and a database-backed contact workflow.
+**Submission links**
+- Live website: https://gucair-aydh.onrender.com/
+- Health check: https://gucair-aydh.onrender.com/health/
+- Source repository: https://github.com/maya05101022/GUCAIR
+- Attachment: GUCAIR_Source_Code.zip
 
-**Technology**
-HTML5, CSS3, Bootstrap 5, ES6 JavaScript, Font Awesome, Chart.js, Python, Django,
-Django Templates/Forms/Auth/ORM, SQLite locally, PostgreSQL in production (Render), Gunicorn,
-WhiteNoise, Git/GitHub, Render, Postman and the Django Test Framework. No React, Node.js,
-MongoDB or Firebase is used.
+**Project: GUCAIR — Global University Consortium of AI Readiness**
 
-**Verification**
-- Automated tests: [NUMBER] Django tests, all passing.
-- Deployment: [DEPLOYMENT VERIFICATION SUMMARY]
-- Security: hashed passwords, CSRF protection, server-side validation, role permissions,
-  ownership checks, environment-based secrets, `DEBUG=False` and HTTPS enforcement.
+GUCAIR is a full-stack Django web application for assessing, comparing and improving
+university AI readiness. It includes:
 
-The source archive contains the full project, requirements, deployment configuration,
-test documentation and README with the verified live URL.
+- a public consortium website with live statistics, an approved-university directory,
+  framework pages, an AI resource hub and a database-backed contact form;
+- role-based accounts for Administrators and University Representatives, with hashed
+  passwords, CSRF protection, server-side validation and ownership checks;
+- institutional registration with an administrator approval workflow and full CRUD;
+- a 24-question assessment across six dimensions, normalised to 0–100 with the bands
+  Initial, Developing, Advanced and Leading, plus recommendations and history;
+- representative and administrator dashboards, consortium analytics generated from real
+  database records, and a five-institution comparison view;
+- 112 automated Django tests, all passing.
+
+**Technology:** HTML5, CSS3, Bootstrap 5, ES6 JavaScript, Font Awesome, Chart.js, Python,
+Django 5.2, Django Templates/Forms/Auth/ORM, SQLite locally, PostgreSQL in production
+(Render), Gunicorn, WhiteNoise, Git/GitHub, Render, Postman and the Django Test Framework.
+No React, Next.js, Node.js, MongoDB or Firebase is used.
+
+**Deployment and verification:** the application is deployed on Render with a Render
+PostgreSQL database. The health endpoint reports a connected database, HTTPS is enforced,
+and the full flow (registration → approval → assessment → analytics) was verified on the
+live site.
+
+**Demonstration sign-in for review**
+
+| Role | Username | Password |
+| --- | --- | --- |
+| Administrator | `gucair_admin` | `Gc7!rT2#vLq9&Wm4` |
+| University Representative | `demo_rep` | `Valley!Q7#mint` |
+
+The ZIP contains the complete project: application code, templates, static assets,
+migrations, tests, `requirements.txt`, `render.yaml`, `build.sh`, the Postman collection
+and the documentation (including the README with the live URL and test results).
 
 Please let me know if you need any additional information.
 
 Yours sincerely,
-[STUDENT FULL NAME]
-[STUDENT ID] · Section [SECTION]
-[STUDENT EMAIL]
-[PHONE NUMBER, IF REQUIRED]
+Humayra Kausar Maya
+Student ID: 0692320005101022 · Section CSE22
+Notre Dame University Bangladesh
 
 ---
 
-## Before sending — required confirmations
+## Before sending
 
-1. Student full name, student ID, section, course code/title and preferred contact details.
-2. Confirmation that the verified Render URL and GitHub repository are correct.
-3. Explicit permission to send this email to `polyghosh@ndub.edu.bd` using the available
-   mail channel.
+1. Confirm the student name, ID (`0692320005101022`) and section (`CSE22`).
+2. Confirm the attachment is the final ZIP built from commit `3f5e741`.
+3. Confirm the exact subject line `web engineering assignment`.
+4. Give explicit permission to send to `polyghosh@ndub.edu.bd`.
